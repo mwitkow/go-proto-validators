@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2016 Michal Witkowski. All Rights Reserved.
+# See LICENSE for licensing terms.
+#
 # This script installs protobuf compiler `protoc` into PATH.
 
 version=${PROTOBUF_VERSION:-"3.0.0-beta-2"}

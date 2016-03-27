@@ -12,6 +12,13 @@ regenerate_test:
 	--gogo_out=. \
 	--govalidators_out=. test/*.proto)
 
+regenerate_example: install
+	@echo "Regenerating example directory"
+	(PATH=${GOPATH}/bin:${PATH} protoc  \
+	--proto_path=${GOPATH}/src:${GOPATH}/src/github.com/gogo/protobuf/protobuf/:. \
+	--gogo_out=. \
+	--govalidators_out=. examples/*.proto)
+
 test: install regenerate_test
 	@echo "Running tests"
 	(go test -v ./...)
