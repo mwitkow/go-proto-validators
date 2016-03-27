@@ -1,0 +1,27 @@
+// Copyright 2016 Michal Witkowski. All Rights Reserved.
+// See LICENSE for licensing terms.
+
+// Protocol Buffers extensions for defining auto-generateable validators for messages.
+
+// TODO(mwitkow): Add example.
+
+
+syntax = "proto2";
+package validator;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "validator";
+
+// TODO(mwitkow): Email protobuf-global-extension-registry@google.com to get an extension ID.
+
+extend google.protobuf.FieldOptions {
+  optional FieldValidator validator = 65020;
+}
+
+message FieldValidator {
+  optional string regex = 1;
+  optional int64 int_gt = 2;
+  optional int64 int_lt = 3;
+  optional bool msg_exists = 4;
+}
