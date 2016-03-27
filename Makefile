@@ -16,7 +16,6 @@ test: install regenerate_test
 	@echo "Running tests"
 	(go test -v ./...)
 
-
 regenerate:
 	@echo "Regenerating validator.proto"
 	(PATH=${GOPATH}/bin:${PATH}  protoc \

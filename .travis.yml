@@ -1,0 +1,13 @@
+language: go
+go:
+  - 1.5
+  - 1.6
+
+before_install:
+  - ./install_protoc.sh
+
+install:
+  - go install github.com/gogo/protobuf/protoc-gen-gogo
+
+script:
+ - make test
