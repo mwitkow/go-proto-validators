@@ -30,7 +30,9 @@ message OuterMessage {
 ```
 
 First, the **`required` keyword is back** for `proto3`, under the guise of `msg_exists`. The painful `if-nil` checks are taken care of!
+
 Second, the expected values in fields are now part of the contract `.proto` file. No more hunting down conditions in code!
+
 Third, the generated code is understandable and has clear understandable error messages. Take a look:
 
 ```go
@@ -76,6 +78,11 @@ Then, do the usual
 go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
 ```
 
+TODO(mwitkow): Finish this section
+
+###License
+
+`go-proto-validators` is released under the Apache 2.0 license. See the [LICENSE](LICENSE) file for details.
 
 
 

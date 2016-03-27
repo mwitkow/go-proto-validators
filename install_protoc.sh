@@ -14,11 +14,11 @@ echo "Downloading and installing protoc ${version}"
 
 mkdir -p ${dst_dir}
 
-wget https://github.com/google/protobuf/releases/download/${version}/protoc-${version}-linux-x86_64.zip -O ${dst_dir}/dist.zip
+wget https://github.com/google/protobuf/releases/download/v${version}/protoc-${version}-linux-x86_64.zip -O ${dst_dir}/dist.zip
 
 cd ${dst_dir}
-unzip dist.zip
+unzip -o dist.zip
 
-echo "Updating \$PATH and setting \$PROTOBUF_DIR"
 export PROTOBUF_DIR=${dst_dir}
 export PATH=${PATH}:${PROTOBUF_DIR}
+echo "Exported \$PROTOBUF_DIR=${PROTOBUF_DIR} in \$PATH"
