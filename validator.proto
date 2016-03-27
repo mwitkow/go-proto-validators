@@ -16,7 +16,7 @@ option go_package = "validator";
 // TODO(mwitkow): Email protobuf-global-extension-registry@google.com to get an extension ID.
 
 extend google.protobuf.FieldOptions {
-  optional FieldValidator validator = 65020;
+  optional FieldValidator field = 65020;
 }
 
 message FieldValidator {
