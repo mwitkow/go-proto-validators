@@ -75,7 +75,30 @@ export PATH=${PATH}:${GOPATH}/bin
 Then, do the usual
 
 ```sh
-go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
+go get github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
+```
+
+Your `protoc` builds probably look very simple like:
+
+```sh
+protoc  \
+	--proto_path=. \
+	--go_out=. \
+	*.proto
+```
+
+That's fine, until you encounter `.proto` includes. Because `go-proto-validators` uses annotations inside the `.proto` 
+files themselves, it's `.proto` definition (and the Google `descriptor.proto` itself) need to on the `protoc` include
+path. Hence the above becomes:
+
+```sh
+protoc  \
+	--proto_path=${GOPATH}/src \
+	--proto_path=${GOPATH}src/github.com/gogo/protobuf/protobuf \
+	--proto_path=. \
+	--go_out=. \
+	--govalidators_out=. \
+	*.proto
 ```
 
 TODO(mwitkow): Finish this section
