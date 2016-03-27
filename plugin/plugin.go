@@ -106,7 +106,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 
 func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.FieldValidator {
 	if field.Options != nil {
-		v, err := proto.GetExtension(field.Options, validator.E_Validator)
+		v, err := proto.GetExtension(field.Options, validator.E_Field)
 		if err == nil && v.(*validator.FieldValidator) != nil {
 			return (v.(*validator.FieldValidator))
 		}
