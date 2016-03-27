@@ -19,6 +19,4 @@ wget https://github.com/google/protobuf/releases/download/v${version}/protoc-${v
 cd ${dst_dir}
 unzip -o dist.zip
 
-export PROTOBUF_DIR=${dst_dir}
-export PATH=${PATH}:${PROTOBUF_DIR}
-echo "Exported \$PROTOBUF_DIR=${PROTOBUF_DIR} in \$PATH"
+echo "Proto in \$PROTOBUF_DIR=${PROTOBUF_DIR}"

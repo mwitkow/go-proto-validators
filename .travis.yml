@@ -5,9 +5,10 @@ go:
 
 before_install:
   - ./install_protoc.sh
+  - export PATH=$PATH:$HOME/soft/protobuf
 
 install:
-  - go install github.com/gogo/protobuf/protoc-gen-gogo
+  - go get github.com/gogo/protobuf/protoc-gen-gogo
 
 script:
  - make test
