@@ -9,6 +9,7 @@ before_install:
 
 install:
   - go get github.com/gogo/protobuf/protoc-gen-gogo
+  - go get github.com/golang/protobuf
 
 script:
  - make test
