@@ -94,14 +94,15 @@ path. Hence the above becomes:
 ```sh
 protoc  \
 	--proto_path=${GOPATH}/src \
-	--proto_path=${GOPATH}src/github.com/gogo/protobuf/protobuf \
+	--proto_path=${GOPATH}/src/github.com/gogo/protobuf/protobuf \
 	--proto_path=. \
 	--go_out=. \
 	--govalidators_out=. \
 	*.proto
 ```
 
-TODO(mwitkow): Finish this section
+Basically the magical incantation (apart from includes) is the `--govalidators_out`. That triggers the 
+`protoc-gen-govalidators` plugin to generate `mymessage.validator.pb.go`. That's it :)
 
 ###License
 
