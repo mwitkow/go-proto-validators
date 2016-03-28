@@ -12,7 +12,7 @@ regenerate_test:
 	(protoc  \
 	--proto_path=${GOPATH}/src \
 	--proto_path=${GOPATH}/src/github.com/gogo/protobuf/protobuf \
- 	-proto_path=. \
+ 	--proto_path=. \
 	--gogo_out=. \
 	--govalidators_out=. test/*.proto)
 
