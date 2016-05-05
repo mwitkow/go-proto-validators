@@ -51,12 +51,13 @@ package plugin
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gogo/protobuf/gogoproto"
+	"github.com/gogo/protobuf/proto"
 	descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/mwitkow/go-proto-validators"
-	"github.com/gogo/protobuf/proto"
 )
 
 func init() {
@@ -204,7 +205,11 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		fieldName := p.GetFieldName(message, field)
 		variableName := "this." + fieldName
 		repeated := field.IsRepeated()
-		nullable := gogoproto.IsNullable(field)
+		nullable := gogoproto.IsNullable(field) && field.IsMessage()
+		if p.fieldIsProto3Map(file, message, field) {
+			p.P(`// Validation of proto3 map<> fields is unsupported.`)
+			continue
+		}
 		if repeated {
 			p.P(`for _, item := range `, variableName, `{`)
 			p.In()
@@ -283,6 +288,44 @@ func (p *plugin) generateStringValidator(variableName string, ccTypeName string,
 		p.Out()
 		p.P(`}`)
 	}
+}
+
+func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *generator.Descriptor, field *descriptor.FieldDescriptorProto) bool {
+	// Context from descriptor.proto
+	// Whether the message is an automatically generated map entry type for the
+	// maps field.
+	//
+	// For maps fields:
+	//     map<KeyType, ValueType> map_field = 1;
+	// The parsed descriptor looks like:
+	//     message MapFieldEntry {
+	//         option map_entry = true;
+	//         optional KeyType key = 1;
+	//         optional ValueType value = 2;
+	//     }
+	//     repeated MapFieldEntry map_field = 1;
+	//
+	// Implementations may choose not to generate the map_entry=true message, but
+	// use a native map in the target language to hold the keys and values.
+	// The reflection APIs in such implementions still need to work as
+	// if the field is a repeated message field.
+	//
+	// NOTE: Do not set the option in .proto files. Always use the maps syntax
+	// instead. The option should only be implicitly set by the proto compiler
+	// parser.
+	if field.GetType() != descriptor.FieldDescriptorProto_TYPE_MESSAGE || !field.IsRepeated() {
+		return false
+	}
+	typeName := field.GetTypeName()
+	var msg *descriptor.DescriptorProto
+	if strings.HasPrefix(typeName, ".") {
+		// Fully qualified case, look up in global map, must work or fail badly.
+		msg = p.ObjectNamed(field.GetTypeName()).(*generator.Descriptor).DescriptorProto
+	} else {
+		// Nested, relative case.
+		msg = file.GetNestedMessage(message.DescriptorProto, field.GetTypeName())
+	}
+	return msg.GetOptions().GetMapEntry()
 }
 
 func (p *plugin) validatorWithMessageExists(fv *validator.FieldValidator) bool {
