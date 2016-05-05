@@ -131,3 +131,10 @@ func TestMsgExist(t *testing.T) {
 		t.Fatalf("expected fail due to lacking SomeEmbeddedExists")
 	}
 }
+
+func TestMapAlwaysPassesUntilFixedProperly(t *testing.T) {
+	example := &ValidatorMapMessage3{}
+	if err := example.Validate(); err != nil {
+		t.Fatalf("map validators should always pass")
+	}
+}
