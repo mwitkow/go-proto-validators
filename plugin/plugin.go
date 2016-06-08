@@ -51,6 +51,7 @@ package plugin
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gogo/protobuf/gogoproto"
@@ -133,7 +134,7 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 		validator := getFieldValidatorIfAny(field)
 		if validator != nil && validator.Regex != nil {
 			fieldName := p.GetFieldName(message, field)
-			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile("`, validator.Regex, `")`)
+			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, strconv.Quote(*validator.Regex), `)`)
 		}
 	}
 }
@@ -284,7 +285,7 @@ func (p *plugin) generateStringValidator(variableName string, ccTypeName string,
 	if fv.Regex != nil {
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 		p.In()
-		p.P(`return `, p.fmtPkg.Use(), `.Errorf("validation error: `, fieldIdentifier, ` must conform to regex '`, fv.Regex, `'")`)
+		p.P(`return `, p.fmtPkg.Use(), `.Errorf("validation error: `, fieldIdentifier, ` must conform to regex " +`, strconv.Quote(*fv.Regex), `)`)
 		p.Out()
 		p.P(`}`)
 	}

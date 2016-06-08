@@ -14,6 +14,7 @@ message ValidatorMessage3 {
 	}
 	string SomeString = 1 [(validator.field) = {regex: "^.{2,5}$"}];
 	repeated string SomeStringRep = 2 [(validator.field) = {regex: "^.{2,5}$"}];
+	string SomeStringNoQuotes = 3 [(validator.field) = {regex: "^[^\"]{2,5}$"}];
 
 	uint32 SomeInt = 6  [(validator.field) = {int_gt: 10}];
 	repeated uint32 SomeIntRep = 7  [(validator.field) = {int_gt: 10}];

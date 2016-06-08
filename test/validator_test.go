@@ -14,6 +14,7 @@ func buildProto3(someString string, someInt uint32, identifier string, someValue
 	goodProto3 := &ValidatorMessage3{
 		SomeString:                    someString,
 		SomeStringRep:                 []string{someString, "xyz34"},
+		SomeStringNoQuotes:            someString,
 		SomeInt:                       someInt,
 		SomeIntRep:                    []uint32{someInt, 12, 13, 14, 15, 16},
 		SomeIntRepNonNull:             []uint32{someInt, 102},
