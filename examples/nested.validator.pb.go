@@ -17,7 +17,7 @@ package validator_examples
 import regexp "regexp"
 import fmt "fmt"
 import github_com_mwitkow_go_proto_validators "github.com/mwitkow/go-proto-validators"
-import proto "github.com/gogo/protobuf/proto"
+import proto "github.com/golang/protobuf/proto"
 import math "math"
 import _ "github.com/mwitkow/go-proto-validators"
 

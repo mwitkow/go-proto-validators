@@ -30,7 +30,7 @@ func main() {
 		gen.Fail("no files to generate")
 	}
 
-	useGogoImport := true
+	useGogoImport := false
 	// Match parsing algorithm from Generator.CommandLineParameters
 	for _, parameter := range strings.Split(gen.Request.GetParameter(), ",") {
 		kvp := strings.SplitN(parameter, "=", 2)
