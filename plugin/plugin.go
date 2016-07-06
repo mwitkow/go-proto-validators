@@ -58,24 +58,22 @@ import (
 	"github.com/gogo/protobuf/proto"
 	descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
+	"github.com/gogo/protobuf/vanity"
 	"github.com/mwitkow/go-proto-validators"
 )
-
-func init() {
-	generator.RegisterPlugin(NewPlugin())
-}
 
 type plugin struct {
 	*generator.Generator
 	generator.PluginImports
-	regexPkg     generator.Single
-	fmtPkg       generator.Single
-	protoPkg     generator.Single
-	validatorPkg generator.Single
+	regexPkg      generator.Single
+	fmtPkg        generator.Single
+	protoPkg      generator.Single
+	validatorPkg  generator.Single
+	useGogoImport bool
 }
 
-func NewPlugin() generator.Plugin {
-	return &plugin{}
+func NewPlugin(useGogoImport bool) generator.Plugin {
+	return &plugin{useGogoImport: useGogoImport}
 }
 
 func (p *plugin) Name() string {
@@ -87,6 +85,9 @@ func (p *plugin) Init(g *generator.Generator) {
 }
 
 func (p *plugin) Generate(file *generator.FileDescriptor) {
+	if !p.useGogoImport {
+		vanity.TurnOffGogoImport(file.FileDescriptorProto)
+	}
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
@@ -156,6 +157,8 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 		variableName := "this." + fieldName
 		repeated := field.IsRepeated()
 		nullable := gogoproto.IsNullable(field)
+		// For proto2 syntax, only Gogo generates non-pointer fields
+		nonpointer := gogoproto.ImportsGoGoProto(file.FileDescriptorProto) && !gogoproto.IsNullable(field)
 		if repeated {
 			p.P(`for _, item := range `, variableName, `{`)
 			p.In()
@@ -164,6 +167,10 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 			p.P(`if `, variableName, ` != nil {`)
 			p.In()
 			variableName = "*(" + variableName + ")"
+		} else if nonpointer {
+			// can use the field directly
+		} else if !field.IsMessage() {
+			variableName = `this.Get` + fieldName + `()`
 		}
 		if field.IsString() {
 			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValudator)
@@ -206,7 +213,8 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		fieldName := p.GetFieldName(message, field)
 		variableName := "this." + fieldName
 		repeated := field.IsRepeated()
-		nullable := gogoproto.IsNullable(field) && field.IsMessage()
+		// Golang's proto3 has no concept of unset primitive fields
+		nullable := (gogoproto.IsNullable(field) || !gogoproto.ImportsGoGoProto(file.FileDescriptorProto)) && field.IsMessage()
 		if p.fieldIsProto3Map(file, message, field) {
 			p.P(`// Validation of proto3 map<> fields is unsupported.`)
 			continue
@@ -238,7 +246,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				p.P(`if `, variableName, ` != nil {`)
 				p.In()
 			} else {
-				// non-nullable fields in proto3 store actual structs, we need pointers to operate on interaces
+				// non-nullable fields in proto3 store actual structs, we need pointers to operate on interfaces
 				variableName = "&(" + variableName + ")"
 			}
 			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `); err != nil {`)

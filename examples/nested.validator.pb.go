@@ -16,8 +16,8 @@ package validator_examples
 
 import regexp "regexp"
 import fmt "fmt"
-import validators "github.com/mwitkow/go-proto-validators"
-import proto "github.com/gogo/protobuf/proto"
+import github_com_mwitkow_go_proto_validators "github.com/mwitkow/go-proto-validators"
+import proto "github.com/golang/protobuf/proto"
 import math "math"
 import _ "github.com/mwitkow/go-proto-validators"
 
@@ -40,13 +40,13 @@ var _regex_OuterMessage_ImportantString = regexp.MustCompile("^[a-z]{2,5}$")
 
 func (this *OuterMessage) Validate() error {
 	if !_regex_OuterMessage_ImportantString.MatchString(this.ImportantString) {
-		return fmt.Errorf("validation error: OuterMessage.ImportantString must conform to regex '^[a-z]{2,5}$'")
+		return fmt.Errorf("validation error: OuterMessage.ImportantString must conform to regex " + "^[a-z]{2,5}$")
 	}
 	if nil == this.Inner {
 		return fmt.Errorf("validation error: OuterMessage.Inner message must exist")
 	}
 	if this.Inner != nil {
-		if err := validators.CallValidatorIfExists(this.Inner); err != nil {
+		if err := github_com_mwitkow_go_proto_validators.CallValidatorIfExists(this.Inner); err != nil {
 			return err
 		}
 	}
