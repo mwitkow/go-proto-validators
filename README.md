@@ -101,6 +101,18 @@ protoc  \
 	*.proto
 ```
 
+Or with gogo protobufs:
+
+```sh
+protoc  \
+	--proto_path=${GOPATH}/src \
+	--proto_path=${GOPATH}/src/github.com/gogo/protobuf/protobuf \
+	--proto_path=. \
+	--gogo_out=. \
+	--govalidators_out=gogoimport=true:. \
+	*.proto
+```
+
 Basically the magical incantation (apart from includes) is the `--govalidators_out`. That triggers the 
 `protoc-gen-govalidators` plugin to generate `mymessage.validator.pb.go`. That's it :)
 
