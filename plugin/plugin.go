@@ -62,10 +62,6 @@ import (
 	"github.com/mwitkow/go-proto-validators"
 )
 
-func init() {
-	generator.RegisterPlugin(NewPlugin(true))
-}
-
 type plugin struct {
 	*generator.Generator
 	generator.PluginImports
