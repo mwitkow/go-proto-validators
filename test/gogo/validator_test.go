@@ -125,7 +125,7 @@ func TestMsgExist(t *testing.T) {
 	someProto3 := buildProto3("-%ab", 11, "abba", 99)
 	someProto3.SomeEmbedded = nil
 	if err := someProto3.Validate(); err != nil {
-		t.Fatalf("valiate shoudlnt fail on missing SomeEmbedded, not annotated")
+		t.Fatalf("validate shouldn't fail on missing SomeEmbedded, not annotated")
 	}
 	someProto3.SomeEmbeddedExists = nil
 	if err := someProto3.Validate(); err == nil {
