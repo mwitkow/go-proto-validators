@@ -58,24 +58,26 @@ import (
 	"github.com/gogo/protobuf/proto"
 	descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
+	"github.com/gogo/protobuf/vanity"
 	"github.com/mwitkow/go-proto-validators"
 )
 
 func init() {
-	generator.RegisterPlugin(NewPlugin())
+	generator.RegisterPlugin(NewPlugin(true))
 }
 
 type plugin struct {
 	*generator.Generator
 	generator.PluginImports
-	regexPkg     generator.Single
-	fmtPkg       generator.Single
-	protoPkg     generator.Single
-	validatorPkg generator.Single
+	regexPkg      generator.Single
+	fmtPkg        generator.Single
+	protoPkg      generator.Single
+	validatorPkg  generator.Single
+	useGogoImport bool
 }
 
-func NewPlugin() generator.Plugin {
-	return &plugin{}
+func NewPlugin(useGogoImport bool) generator.Plugin {
+	return &plugin{useGogoImport: useGogoImport}
 }
 
 func (p *plugin) Name() string {
@@ -87,6 +89,9 @@ func (p *plugin) Init(g *generator.Generator) {
 }
 
 func (p *plugin) Generate(file *generator.FileDescriptor) {
+	if !p.useGogoImport {
+		vanity.TurnOffGogoImport(file.FileDescriptorProto)
+	}
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
