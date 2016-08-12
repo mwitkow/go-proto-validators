@@ -133,6 +133,17 @@ func TestMsgExist(t *testing.T) {
 	}
 }
 
+func TestCustomError_Proto3(t *testing.T) {
+	someProto3 := buildProto3("-%ab", 11, "abba", 99)
+	someProto3.CustomErrorInt = 30
+	expectedErr := "validation error: My Custom Error"
+	if err := someProto3.Validate(); err == nil {
+		t.Fatalf("validate should fail on missing CustomErrorInt")
+	} else if err.Error() != expectedErr {
+		t.Fatalf("validation error should be %s but was %s", expectedErr, err.Error())
+	}
+}
+
 func TestMapAlwaysPassesUntilFixedProperly(t *testing.T) {
 	example := &ValidatorMapMessage3{}
 	if err := example.Validate(); err != nil {

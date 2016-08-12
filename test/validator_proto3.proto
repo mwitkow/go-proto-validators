@@ -26,4 +26,7 @@ message ValidatorMessage3 {
 	Embedded someEmbeddedExistsNonNullable = 13  [(gogoproto.nullable) = false, (validator.field) = {msg_exists:true}];
 	repeated Embedded someEmbeddedRep = 14;
 	repeated Embedded someEmbeddedRepNonNullable = 15 [(gogoproto.nullable) = false];
+
+	int32 CustomErrorInt = 16 [(validator.field) = {int_lt: 10, human_error: "My Custom Error"}];
+
 }
