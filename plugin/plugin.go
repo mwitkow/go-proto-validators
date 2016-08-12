@@ -275,14 +275,16 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 	if fv.IntGt != nil {
 		p.P(`if !(`, variableName, ` > `, fv.IntGt, `){`)
 		p.In()
-		p.P(`return `, p.fmtPkg.Use(), `.Errorf("validation error: `, fieldIdentifier, ` must be greater than '`, fv.IntGt, `'")`)
+		errorStr := fmt.Sprintf(`must be greater than '%d'`, fv.GetIntGt())
+		p.generateErrorString(variableName, fieldIdentifier, errorStr, fv)
 		p.Out()
 		p.P(`}`)
 	}
 	if fv.IntLt != nil {
 		p.P(`if !(`, variableName, ` < `, fv.IntLt, `){`)
 		p.In()
-		p.P(`return `, p.fmtPkg.Use(), `.Errorf("validation error: `, fieldIdentifier, ` must be less than '`, fv.IntLt, `'")`)
+		errorStr := fmt.Sprintf(`must be less than '%d'`, fv.GetIntLt())
+		p.generateErrorString(variableName, fieldIdentifier, errorStr, fv)
 		p.Out()
 		p.P(`}`)
 	}
@@ -293,10 +295,20 @@ func (p *plugin) generateStringValidator(variableName string, ccTypeName string,
 	if fv.Regex != nil {
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 		p.In()
-		p.P(`return `, p.fmtPkg.Use(), `.Errorf("validation error: `, fieldIdentifier, ` must conform to regex " +`, strconv.Quote(*fv.Regex), `)`)
+		errorStr := "must conform to regex " + strconv.Quote(fv.GetRegex())
+		p.generateErrorString(variableName, fieldIdentifier, errorStr, fv)
 		p.Out()
 		p.P(`}`)
 	}
+}
+
+func (p * plugin) generateErrorString(variableName string, fieldIdentifier string, specificError string, fv *validator.FieldValidator) {
+	if fv.GetHumanError() == "" {
+		p.P(`return `, p.fmtPkg.Use(), `.Errorf(`, "`", `validation error: `, fieldIdentifier, ` value '%s' must `, specificError, "`", `, `, variableName, `)`)
+	} else {
+		p.P(`return `, p.fmtPkg.Use(), `.Errorf(`, "`", `validation error: `, fv.GetHumanError(), "`", `)`)
+	}
+
 }
 
 func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *generator.Descriptor, field *descriptor.FieldDescriptorProto) bool {
