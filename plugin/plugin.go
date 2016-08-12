@@ -304,7 +304,7 @@ func (p *plugin) generateStringValidator(variableName string, ccTypeName string,
 
 func (p * plugin) generateErrorString(variableName string, fieldIdentifier string, specificError string, fv *validator.FieldValidator) {
 	if fv.GetHumanError() == "" {
-		p.P(`return `, p.fmtPkg.Use(), `.Errorf(`, "`", `validation error: `, fieldIdentifier, ` value '%s' must `, specificError, "`", `, `, variableName, `)`)
+		p.P(`return `, p.fmtPkg.Use(), `.Errorf(`, "`", `validation error: `, fieldIdentifier, ` value '%s' `, specificError, "`", `, `, variableName, `)`)
 	} else {
 		p.P(`return `, p.fmtPkg.Use(), `.Errorf(`, "`", `validation error: `, fv.GetHumanError(), "`", `)`)
 	}
