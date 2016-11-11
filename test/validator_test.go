@@ -3,7 +3,10 @@
 
 package validatortest
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func buildProto3(someString string, someInt uint32, identifier string, someValue int64) *ValidatorMessage3 {
 	goodEmbeddedProto3 := &ValidatorMessage3_Embedded{
@@ -129,5 +132,17 @@ func TestMsgExist(t *testing.T) {
 	someProto3.SomeEmbeddedExists = nil
 	if err := someProto3.Validate(); err == nil {
 		t.Fatalf("expected fail due to lacking SomeEmbeddedExists")
+	} else if !strings.HasPrefix(err.Error(), "invalid field SomeEmbeddedExists:") {
+		t.Fatalf("expected fieldError, got '%v'", err)
+	}
+}
+
+func TestNestedError3(t *testing.T) {
+	someProto3 := buildProto3("-%ab", 11, "abba", 99)
+	someProto3.SomeEmbeddedExists.SomeValue = 101 // should be less than 101
+	if err := someProto3.Validate(); err == nil {
+		t.Fatalf("expected fail due to nested SomeEmbeddedExists.SomeValue being wrong")
+	} else if !strings.HasPrefix(err.Error(), "invalid field SomeEmbeddedExists.SomeValue:") {
+		t.Fatalf("expected fieldError, got '%v'", err)
 	}
 }
