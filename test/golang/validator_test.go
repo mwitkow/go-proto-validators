@@ -3,7 +3,10 @@
 
 package validatortest
 
-import "testing"
+import (
+	"testing"
+	"strings"
+)
 
 func buildProto3(someString string, someInt uint32, identifier string, someValue int64) *ValidatorMessage3 {
 	goodEmbeddedProto3 := &ValidatorMessage3_Embedded{
@@ -133,14 +136,24 @@ func TestMsgExist(t *testing.T) {
 	}
 }
 
+func TestNestedError3(t *testing.T) {
+	someProto3 := buildProto3("-%ab", 11, "abba", 99)
+	someProto3.SomeEmbeddedExists.SomeValue = 101 // should be less than 101
+	if err := someProto3.Validate(); err == nil {
+		t.Fatalf("expected fail due to nested SomeEmbeddedExists.SomeValue being wrong")
+	} else if !strings.HasPrefix(err.Error(), "invalid field SomeEmbeddedNonNullable.SomeValue:") {
+		t.Fatalf("expected fieldError, got '%v'", err)
+	}
+}
+
 func TestCustomError_Proto3(t *testing.T) {
 	someProto3 := buildProto3("-%ab", 11, "abba", 99)
 	someProto3.CustomErrorInt = 30
-	expectedErr := "validation error: My Custom Error"
+	expectedErr := "invalid field CustomErrorInt: My Custom Error"
 	if err := someProto3.Validate(); err == nil {
 		t.Fatalf("validate should fail on missing CustomErrorInt")
 	} else if err.Error() != expectedErr {
-		t.Fatalf("validation error should be %s but was %s", expectedErr, err.Error())
+		t.Fatalf("validation error should be '%s' but was '%s'", expectedErr, err.Error())
 	}
 }
 
