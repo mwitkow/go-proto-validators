@@ -51,29 +51,29 @@ package plugin
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/proto"
 	descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
+	"github.com/gogo/protobuf/vanity"
 	"github.com/mwitkow/go-proto-validators"
 )
-
-func init() {
-	generator.RegisterPlugin(NewPlugin())
-}
 
 type plugin struct {
 	*generator.Generator
 	generator.PluginImports
-	regexPkg     generator.Single
-	fmtPkg       generator.Single
-	protoPkg     generator.Single
-	validatorPkg generator.Single
+	regexPkg      generator.Single
+	fmtPkg        generator.Single
+	protoPkg      generator.Single
+	validatorPkg  generator.Single
+	useGogoImport bool
 }
 
-func NewPlugin() generator.Plugin {
-	return &plugin{}
+func NewPlugin(useGogoImport bool) generator.Plugin {
+	return &plugin{useGogoImport: useGogoImport}
 }
 
 func (p *plugin) Name() string {
@@ -85,6 +85,9 @@ func (p *plugin) Init(g *generator.Generator) {
 }
 
 func (p *plugin) Generate(file *generator.FileDescriptor) {
+	if !p.useGogoImport {
+		vanity.TurnOffGogoImport(file.FileDescriptorProto)
+	}
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
@@ -132,7 +135,7 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 		validator := getFieldValidatorIfAny(field)
 		if validator != nil && validator.Regex != nil {
 			fieldName := p.GetFieldName(message, field)
-			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile("`, validator.Regex, `")`)
+			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, strconv.Quote(*validator.Regex), `)`)
 		}
 	}
 }
@@ -154,6 +157,8 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 		variableName := "this." + fieldName
 		repeated := field.IsRepeated()
 		nullable := gogoproto.IsNullable(field)
+		// For proto2 syntax, only Gogo generates non-pointer fields
+		nonpointer := gogoproto.ImportsGoGoProto(file.FileDescriptorProto) && !gogoproto.IsNullable(field)
 		if repeated {
 			p.P(`for _, item := range `, variableName, `{`)
 			p.In()
@@ -162,6 +167,10 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 			p.P(`if `, variableName, ` != nil {`)
 			p.In()
 			variableName = "*(" + variableName + ")"
+		} else if nonpointer {
+			// can use the field directly
+		} else if !field.IsMessage() {
+			variableName = `this.Get` + fieldName + `()`
 		}
 		if field.IsString() {
 			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValudator)
@@ -173,7 +182,7 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 			}
 			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(&(`, variableName, `)); err != nil {`)
 			p.In()
-			p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `", err)`)
+			p.P(`return err`)
 			p.Out()
 			p.P(`}`)
 		}
@@ -204,7 +213,12 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		fieldName := p.GetFieldName(message, field)
 		variableName := "this." + fieldName
 		repeated := field.IsRepeated()
-		nullable := gogoproto.IsNullable(field)
+		// Golang's proto3 has no concept of unset primitive fields
+		nullable := (gogoproto.IsNullable(field) || !gogoproto.ImportsGoGoProto(file.FileDescriptorProto)) && field.IsMessage()
+		if p.fieldIsProto3Map(file, message, field) {
+			p.P(`// Validation of proto3 map<> fields is unsupported.`)
+			continue
+		}
 		if repeated {
 			p.P(`for _, item := range `, variableName, `{`)
 			p.In()
@@ -219,7 +233,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				if nullable && !repeated {
 					p.P(`if nil == `, variableName, `{`)
 					p.In()
-					p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("message must exist"))`)
+					p.P(`return `, p.fmtPkg.Use(), `.Errorf("validation error: `, ccTypeName+"."+fieldName, ` message must exist")`)
 					p.Out()
 					p.P(`}`)
 				} else if repeated {
@@ -232,12 +246,12 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				p.P(`if `, variableName, ` != nil {`)
 				p.In()
 			} else {
-				// non-nullable fields in proto3 store actual structs, we need pointers to operate on interaces
+				// non-nullable fields in proto3 store actual structs, we need pointers to operate on interfaces
 				variableName = "&(" + variableName + ")"
 			}
 			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `); err != nil {`)
 			p.In()
-			p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `", err)`)
+			p.P(`return err`)
 			p.Out()
 			p.P(`}`)
 			if nullable {
@@ -257,30 +271,82 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 }
 
 func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+	fieldIdentifier := ccTypeName + "." + fieldName
 	if fv.IntGt != nil {
 		p.P(`if !(`, variableName, ` > `, fv.IntGt, `){`)
 		p.In()
-		p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("must be greater than '`, fv.IntGt, `'"))`)
+		errorStr := fmt.Sprintf(`must be greater than '%d'`, fv.GetIntGt())
+		p.generateErrorString(variableName, fieldIdentifier, errorStr, fv)
 		p.Out()
 		p.P(`}`)
 	}
 	if fv.IntLt != nil {
 		p.P(`if !(`, variableName, ` < `, fv.IntLt, `){`)
 		p.In()
-		p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("must be less than '`, fv.IntGt, `'"))`)
+		errorStr := fmt.Sprintf(`must be less than '%d'`, fv.GetIntLt())
+		p.generateErrorString(variableName, fieldIdentifier, errorStr, fv)
 		p.Out()
 		p.P(`}`)
 	}
 }
 
 func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+	fieldIdentifier := ccTypeName + "." + fieldName
 	if fv.Regex != nil {
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 		p.In()
-		p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("must conform to regex '`, fv.Regex, `'"))`)
+		errorStr := "must conform to regex " + strconv.Quote(fv.GetRegex())
+		p.generateErrorString(variableName, fieldIdentifier, errorStr, fv)
 		p.Out()
 		p.P(`}`)
 	}
+}
+
+func (p * plugin) generateErrorString(variableName string, fieldIdentifier string, specificError string, fv *validator.FieldValidator) {
+	if fv.GetHumanError() == "" {
+		p.P(`return `, p.fmtPkg.Use(), `.Errorf(`, "`", `validation error: `, fieldIdentifier, ` value '%s' must `, specificError, "`", `, `, variableName, `)`)
+	} else {
+		p.P(`return `, p.fmtPkg.Use(), `.Errorf(`, "`", `validation error: `, fv.GetHumanError(), "`", `)`)
+	}
+
+}
+
+func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *generator.Descriptor, field *descriptor.FieldDescriptorProto) bool {
+	// Context from descriptor.proto
+	// Whether the message is an automatically generated map entry type for the
+	// maps field.
+	//
+	// For maps fields:
+	//     map<KeyType, ValueType> map_field = 1;
+	// The parsed descriptor looks like:
+	//     message MapFieldEntry {
+	//         option map_entry = true;
+	//         optional KeyType key = 1;
+	//         optional ValueType value = 2;
+	//     }
+	//     repeated MapFieldEntry map_field = 1;
+	//
+	// Implementations may choose not to generate the map_entry=true message, but
+	// use a native map in the target language to hold the keys and values.
+	// The reflection APIs in such implementions still need to work as
+	// if the field is a repeated message field.
+	//
+	// NOTE: Do not set the option in .proto files. Always use the maps syntax
+	// instead. The option should only be implicitly set by the proto compiler
+	// parser.
+	if field.GetType() != descriptor.FieldDescriptorProto_TYPE_MESSAGE || !field.IsRepeated() {
+		return false
+	}
+	typeName := field.GetTypeName()
+	var msg *descriptor.DescriptorProto
+	if strings.HasPrefix(typeName, ".") {
+		// Fully qualified case, look up in global map, must work or fail badly.
+		msg = p.ObjectNamed(field.GetTypeName()).(*generator.Descriptor).DescriptorProto
+	} else {
+		// Nested, relative case.
+		msg = file.GetNestedMessage(message.DescriptorProto, field.GetTypeName())
+	}
+	return msg.GetOptions().GetMapEntry()
 }
 
 func (p *plugin) validatorWithMessageExists(fv *validator.FieldValidator) bool {

@@ -14,6 +14,7 @@ message ValidatorMessage3 {
 	}
 	string SomeString = 1 [(validator.field) = {regex: "^.{2,5}$"}];
 	repeated string SomeStringRep = 2 [(validator.field) = {regex: "^.{2,5}$"}];
+	string SomeStringNoQuotes = 3 [(validator.field) = {regex: "^[^\"]{2,5}$"}];
 
 	uint32 SomeInt = 6  [(validator.field) = {int_gt: 10}];
 	repeated uint32 SomeIntRep = 7  [(validator.field) = {int_gt: 10}];
@@ -25,4 +26,7 @@ message ValidatorMessage3 {
 	Embedded someEmbeddedExistsNonNullable = 13  [(gogoproto.nullable) = false, (validator.field) = {msg_exists:true}];
 	repeated Embedded someEmbeddedRep = 14;
 	repeated Embedded someEmbeddedRepNonNullable = 15 [(gogoproto.nullable) = false];
+
+	int32 CustomErrorInt = 16 [(validator.field) = {int_lt: 10, human_error: "My Custom Error"}];
+
 }

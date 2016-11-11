@@ -3,10 +3,7 @@
 
 package validatortest
 
-import (
-	"strings"
-	"testing"
-)
+import "testing"
 
 func buildProto3(someString string, someInt uint32, identifier string, someValue int64) *ValidatorMessage3 {
 	goodEmbeddedProto3 := &ValidatorMessage3_Embedded{
@@ -17,15 +14,16 @@ func buildProto3(someString string, someInt uint32, identifier string, someValue
 	goodProto3 := &ValidatorMessage3{
 		SomeString:                    someString,
 		SomeStringRep:                 []string{someString, "xyz34"},
+		SomeStringNoQuotes:            someString,
 		SomeInt:                       someInt,
 		SomeIntRep:                    []uint32{someInt, 12, 13, 14, 15, 16},
 		SomeIntRepNonNull:             []uint32{someInt, 102},
 		SomeEmbedded:                  nil,
-		SomeEmbeddedNonNullable:       *goodEmbeddedProto3,
+		SomeEmbeddedNonNullable:       goodEmbeddedProto3,
 		SomeEmbeddedExists:            goodEmbeddedProto3,
-		SomeEmbeddedExistsNonNullable: *goodEmbeddedProto3,
+		SomeEmbeddedExistsNonNullable: goodEmbeddedProto3,
 		SomeEmbeddedRep:               []*ValidatorMessage3_Embedded{goodEmbeddedProto3},
-		SomeEmbeddedRepNonNullable:    []ValidatorMessage3_Embedded{*goodEmbeddedProto3},
+		SomeEmbeddedRepNonNullable:    []*ValidatorMessage3_Embedded{goodEmbeddedProto3},
 	}
 	return goodProto3
 }
@@ -38,20 +36,20 @@ func buildProto2(someString string, someInt uint32, identifier string, someValue
 
 	goodProto2 := &ValidatorMessage{
 		StringReq:        &someString,
-		StringReqNonNull: someString,
+		StringReqNonNull: &someString,
 
-		StringOpt:        nil,
-		StringOptNonNull: someString,
+		StringOpt:        &someString,
+		StringOptNonNull: &someString,
 
 		IntReq:        &someInt,
-		IntReqNonNull: someInt,
+		IntReqNonNull: &someInt,
 		IntRep:        []uint32{someInt, 12, 13, 14, 15, 16},
 		IntRepNonNull: []uint32{someInt, 12, 13, 14, 15, 16},
 
 		EmbeddedReq:            goodEmbeddedProto2,
-		EmbeddedNonNull:        *goodEmbeddedProto2,
+		EmbeddedNonNull:        goodEmbeddedProto2,
 		EmbeddedRep:            []*ValidatorMessage_Embedded{goodEmbeddedProto2},
-		EmbeddedRepNonNullable: []ValidatorMessage_Embedded{*goodEmbeddedProto2},
+		EmbeddedRepNonNullable: []*ValidatorMessage_Embedded{goodEmbeddedProto2},
 	}
 	return goodProto2
 }
@@ -127,22 +125,28 @@ func TestMsgExist(t *testing.T) {
 	someProto3 := buildProto3("-%ab", 11, "abba", 99)
 	someProto3.SomeEmbedded = nil
 	if err := someProto3.Validate(); err != nil {
-		t.Fatalf("valiate shoudlnt fail on missing SomeEmbedded, not annotated")
+		t.Fatalf("validate shouldn't fail on missing SomeEmbedded, not annotated")
 	}
 	someProto3.SomeEmbeddedExists = nil
 	if err := someProto3.Validate(); err == nil {
 		t.Fatalf("expected fail due to lacking SomeEmbeddedExists")
-	} else if !strings.HasPrefix(err.Error(), "invalid field SomeEmbeddedExists:") {
-		t.Fatalf("expected fieldError, got '%v'", err)
 	}
 }
 
-func TestNestedError3(t *testing.T) {
+func TestCustomError_Proto3(t *testing.T) {
 	someProto3 := buildProto3("-%ab", 11, "abba", 99)
-	someProto3.SomeEmbeddedExists.SomeValue = 101 // should be less than 101
+	someProto3.CustomErrorInt = 30
+	expectedErr := "validation error: My Custom Error"
 	if err := someProto3.Validate(); err == nil {
-		t.Fatalf("expected fail due to nested SomeEmbeddedExists.SomeValue being wrong")
-	} else if !strings.HasPrefix(err.Error(), "invalid field SomeEmbeddedExists.SomeValue:") {
-		t.Fatalf("expected fieldError, got '%v'", err)
+		t.Fatalf("validate should fail on missing CustomErrorInt")
+	} else if err.Error() != expectedErr {
+		t.Fatalf("validation error should be %s but was %s", expectedErr, err.Error())
+	}
+}
+
+func TestMapAlwaysPassesUntilFixedProperly(t *testing.T) {
+	example := &ValidatorMapMessage3{}
+	if err := example.Validate(); err != nil {
+		t.Fatalf("map validators should always pass")
 	}
 }
