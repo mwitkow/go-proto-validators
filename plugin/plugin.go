@@ -129,6 +129,14 @@ func (p *plugin) isSupportedInt(field *descriptor.FieldDescriptorProto) bool {
 	return false
 }
 
+func (p *plugin) isSupportedDouble(field *descriptor.FieldDescriptorProto) bool {
+	switch *(field.Type) {
+	case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
+		return true
+	}
+	return false
+}
+
 func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	for _, field := range message.Field {
@@ -176,6 +184,8 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValudator)
 		} else if p.isSupportedInt(field) {
 			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValudator)
+		} else if p.isSupportedDouble(field) {
+			p.generateDoubleValidator(variableName, ccTypeName, fieldName, fieldValudator)
 		} else if field.IsMessage() {
 			if repeated && nullable {
 				variableName = "*(item)"
@@ -228,6 +238,8 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if p.isSupportedInt(field) {
 			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValidator)
+		} else if p.isSupportedDouble(field) {
+			p.generateDoubleValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if field.IsMessage() {
 			if p.validatorWithMessageExists(fieldValidator) {
 				if nullable && !repeated {
@@ -289,6 +301,25 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 	}
 }
 
+func (p *plugin) generateDoubleValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+	if fv.DoubleGt != nil {
+		p.P(`if !(`, variableName, ` > `, fv.DoubleGt, `){`)
+		p.In()
+		errorStr := fmt.Sprintf(`must be greater than '%f'`, fv.GetDoubleGt())
+		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		p.Out()
+		p.P(`}`)
+	}
+	if fv.DoubleLt != nil {
+		p.P(`if !(`, variableName, ` < `, fv.DoubleLt, `){`)
+		p.In()
+		errorStr := fmt.Sprintf(`must be less than '%f'`, fv.GetDoubleLt())
+		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		p.Out()
+		p.P(`}`)
+	}
+}
+
 func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if fv.Regex != nil {
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
@@ -300,7 +331,7 @@ func (p *plugin) generateStringValidator(variableName string, ccTypeName string,
 	}
 }
 
-func (p * plugin) generateErrorString(variableName string, fieldName string, specificError string, fv *validator.FieldValidator) {
+func (p *plugin) generateErrorString(variableName string, fieldName string, specificError string, fv *validator.FieldValidator) {
 	if fv.GetHumanError() == "" {
 		p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`value '%v' must ", specificError, "`", `, `, variableName, `))`)
 	} else {

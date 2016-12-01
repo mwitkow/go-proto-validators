@@ -23,11 +23,15 @@ message ValidatorMessage {
 	repeated uint32 IntRep = 8 [(validator.field) = {int_gt: 10}];
 	repeated uint32 IntRepNonNull = 9 [(validator.field) = {int_gt: 0}, (gogoproto.nullable) = false];
 
-
 	required Embedded embeddedReq = 10;
 	required Embedded embeddedNonNull = 11  [(gogoproto.nullable) = false];
 	repeated Embedded embeddedRep = 12;
 	repeated Embedded embeddedRepNonNullable = 13 [(gogoproto.nullable) = false];
 
 	optional int32 CustomErrorInt = 16 [(validator.field) = {int_gt: 10, human_error: "My Custom Error"}];
+
+	required double doubleReq = 17 [(validator.field) = {double_gt: 0.3333333, double_lt: 0.6666666}];
+	required double doubleReqNonNull = 18 [(validator.field) = {double_gt: 0.3333333, double_lt: 0.6666666}, (gogoproto.nullable) = false];
+	repeated double doubleRep = 19 [(validator.field) = {double_gt: 0.3333333, double_lt: 0.6666666}];
+	repeated double doubleRepNonNull = 20 [(validator.field) = {double_gt: 0.3333333, double_lt: 0.6666666}, (gogoproto.nullable) = false];
 }
