@@ -303,17 +303,25 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 
 func (p *plugin) generateDoubleValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if fv.DoubleGt != nil {
-		p.P(`if !(`, variableName, ` > `, fv.DoubleGt, `){`)
+		compStr := fmt.Sprint(`if !(`, variableName)
+		if fv.DoubleEpsilon != nil {
+			compStr += fmt.Sprint(`+`, fv.GetDoubleEpsilon())
+		}
+		p.P(compStr, ` > `, fv.DoubleGt, `){`)
 		p.In()
-		errorStr := fmt.Sprintf(`must be greater than '%f'`, fv.GetDoubleGt())
+		errorStr := fmt.Sprintf(`must be greater than '%g'`, fv.GetDoubleGt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
 	}
 	if fv.DoubleLt != nil {
-		p.P(`if !(`, variableName, ` < `, fv.DoubleLt, `){`)
+		compStr := fmt.Sprint(`if !(`, variableName)
+		if fv.DoubleEpsilon != nil {
+			compStr += fmt.Sprint(`-`, fv.GetDoubleEpsilon())
+		}
+		p.P(compStr, ` < `, fv.DoubleLt, `){`)
 		p.In()
-		errorStr := fmt.Sprintf(`must be less than '%f'`, fv.GetDoubleLt())
+		errorStr := fmt.Sprintf(`must be less than '%g'`, fv.GetDoubleLt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)

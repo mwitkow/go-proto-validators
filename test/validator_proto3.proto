@@ -29,7 +29,10 @@ message ValidatorMessage3 {
 
 	int32 CustomErrorInt = 16 [(validator.field) = {int_lt: 10, human_error: "My Custom Error"}];
 
-	double SomeDouble = 17 [(validator.field) = {double_gt: 0.3333333, double_lt: 0.6666666}];
-	repeated double SomeDoubleRep = 19 [(validator.field) = {double_gt: 0.3333333, double_lt: 0.6666666}];
-	repeated double SomeDoubleRepNonNull = 20 [(validator.field) = {double_gt: 0.3333333, double_lt: 0.6666666}, (gogoproto.nullable) = false];
+	// With this epsilon value, the limits become
+	//	SomeDouble+0.05 > 0.35
+	// 	SomeDouble-0.05 < 0.65
+	double SomeDouble = 17 [(validator.field) = {double_gt: 0.35, double_lt: 0.65, double_epsilon: 0.05}];
+	repeated double SomeDoubleRep = 19 [(validator.field) = {double_gt: 0.35, double_lt: 0.65, double_epsilon: 0.05}];
+	repeated double SomeDoubleRepNonNull = 20 [(validator.field) = {double_gt: 0.35, double_lt: 0.65, double_epsilon: 0.05}, (gogoproto.nullable) = false];
 }

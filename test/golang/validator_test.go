@@ -133,24 +133,40 @@ func TestIntUpperBounds(t *testing.T) {
 }
 
 func TestDoubleLowerBounds(t *testing.T) {
-	lowerThan03Proto3 := buildProto3("-%ab", 11, "abba", 99, 0.2)
-	if lowerThan03Proto3.Validate() == nil {
+	lowerThan035EpsilonProto3 := buildProto3("-%ab", 11, "abba", 99, 0.3)
+	if lowerThan035EpsilonProto3.Validate() == nil {
 		t.Fatalf("expected fail in validator, but it didn't happen")
 	}
-	lowerThan03Proto2 := buildProto2("-%ab", 11, "abba", 99, 0.2)
-	if lowerThan03Proto2.Validate() == nil {
+	lowerThan035EpsilonProto2 := buildProto2("-%ab", 11, "abba", 99, 0.3)
+	if lowerThan035EpsilonProto2.Validate() == nil {
 		t.Fatalf("expected fail in validator, but it didn't happen")
+	}
+	greaterThan035EpsilonProto3 := buildProto3("-%ab", 11, "abba", 99, 0.300000001)
+	if greaterThan035EpsilonProto3.Validate() != nil {
+		t.Fatalf("unexpected fail in validator")
+	}
+	greaterThan035EpsilonProto2 := buildProto2("-%ab", 11, "abba", 99, 0.300000001)
+	if greaterThan035EpsilonProto2.Validate() != nil {
+		t.Fatalf("unexpected fail in validator")
 	}
 }
 
 func TestDoubleUpperBounds(t *testing.T) {
-	greaterThan06Proto3 := buildProto3("-%ab", 11, "abba", 99, 0.7)
-	if greaterThan06Proto3.Validate() == nil {
+	greaterThan065EpsilonProto3 := buildProto3("-%ab", 11, "abba", 99, 0.70000000001)
+	if greaterThan065EpsilonProto3.Validate() == nil {
 		t.Fatalf("expected fail in validator, but it didn't happen")
 	}
-	greaterThan06Proto2 := buildProto2("-%ab", 11, "abba", 99, 0.7)
-	if greaterThan06Proto2.Validate() == nil {
+	greaterThan065EpsilonProto2 := buildProto2("-%ab", 11, "abba", 99, 0.70000000001)
+	if greaterThan065EpsilonProto2.Validate() == nil {
 		t.Fatalf("expected fail in validator, but it didn't happen")
+	}
+	lowerThan065EpsilonProto3 := buildProto3("-%ab", 11, "abba", 99, 0.6999999999)
+	if lowerThan065EpsilonProto3.Validate() != nil {
+		t.Fatalf("unexpected fail in validator")
+	}
+	lowerThan065EpsilonProto2 := buildProto2("-%ab", 11, "abba", 99, 0.6999999999)
+	if lowerThan065EpsilonProto2.Validate() != nil {
+		t.Fatalf("unexpected fail in validator")
 	}
 }
 
