@@ -30,7 +30,7 @@ message FieldValidator {
   optional bool msg_exists = 4;
   // Human error specifies a user-customizable error that is visible to the user.
   optional string human_error = 5;
-  // Field value of float strictly greater than this value.
+  // Field value of double strictly greater than this value.
   // Note that this value can only take on a valid floating point
   // value. Use together with float_epsilon if you need something more specific.
   optional double float_gt = 6;
