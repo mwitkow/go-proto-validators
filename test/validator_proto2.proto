@@ -31,10 +31,14 @@ message ValidatorMessage {
 	optional int32 CustomErrorInt = 16 [(validator.field) = {int_gt: 10, human_error: "My Custom Error"}];
 
 	// With this epsilon value, the limits become
-	//	SomeDouble+0.05 > 0.35
-	// 	SomeDouble-0.05 < 0.65
-	required double doubleReq = 17 [(validator.field) = {double_gt: 0.35, double_lt: 0.65, double_epsilon: 0.05}];
-	required double doubleReqNonNull = 18 [(validator.field) = {double_gt: 0.35, double_lt: 0.65, double_epsilon: 0.05}, (gogoproto.nullable) = false];
-	repeated double doubleRep = 19 [(validator.field) = {double_gt: 0.35, double_lt: 0.65, double_epsilon: 0.05}];
-	repeated double doubleRepNonNull = 20 [(validator.field) = {double_gt: 0.35, double_lt: 0.65, double_epsilon: 0.05}, (gogoproto.nullable) = false];
+	//	SomeFloat+0.05 > 0.35
+	// 	SomeFloat-0.05 < 0.65
+	required double DoubleReq = 17 [(validator.field) = {float_gt: 0.35, float_lt: 0.65, float_epsilon: 0.05}];
+	required double DoubleReqNonNull = 18 [(validator.field) = {float_gt: 0.35, float_lt: 0.65, float_epsilon: 0.05}, (gogoproto.nullable) = false];
+	repeated double DoubleRep = 19 [(validator.field) = {float_gt: 0.35, float_lt: 0.65, float_epsilon: 0.05}];
+	repeated double DoubleRepNonNull = 20 [(validator.field) = {float_gt: 0.35, float_lt: 0.65, float_epsilon: 0.05}, (gogoproto.nullable) = false];
+	required float FloatReq = 21 [(validator.field) = {float_gt: 0.35, float_lt: 0.65, float_epsilon: 0.05}];
+	required float FloatReqNonNull = 22 [(validator.field) = {float_gt: 0.35, float_lt: 0.65, float_epsilon: 0.05}, (gogoproto.nullable) = false];
+	repeated float FloatRep = 23 [(validator.field) = {float_gt: 0.35, float_lt: 0.65, float_epsilon: 0.05}];
+	repeated float FloatRepNonNull = 24 [(validator.field) = {float_gt: 0.35, float_lt: 0.65, float_epsilon: 0.05}, (gogoproto.nullable) = false];
 }

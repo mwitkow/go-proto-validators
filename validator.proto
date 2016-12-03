@@ -30,20 +30,20 @@ message FieldValidator {
   optional bool msg_exists = 4;
   // Human error specifies a user-customizable error that is visible to the user.
   optional string human_error = 5;
-  // Field value of double strictly greater than this value.
+  // Field value of float strictly greater than this value.
   // Note that this value can only take on a valid floating point
-  // value. Use together with double_epsilon if you need something more specific.
-  optional double double_gt = 6;
+  // value. Use together with float_epsilon if you need something more specific.
+  optional double float_gt = 6;
   // Field value of double strictly smaller than this value.
   // Note that this value can only take on a valid floating point
-  // value. Use together with double_epsilon if you need something more specific.
-  optional double double_lt = 7;
+  // value. Use together with float_epsilon if you need something more specific.
+  optional double float_lt = 7;
   // Field value of double describing the epsilon within which
   // any comparison should be considered to be true. For example,
-  // when using double_gt = 0.35, using a double_epsilon of 0.05
+  // when using float_gt = 0.35, using a float_epsilon of 0.05
   // would mean that any value above 0.30 is acceptable. It can be
-  // thought of as a {double_value_condition} +- {double_epsilon}.
+  // thought of as a {float_value_condition} +- {float_epsilon}.
   // If unset, no correction for floating point inaccuracies in
   // comparisons will be attempted.
-  optional double double_epsilon = 8;
+  optional double float_epsilon = 8;
 }
