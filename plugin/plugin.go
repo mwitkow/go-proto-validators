@@ -222,7 +222,8 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		if fieldValidator == nil && !field.IsMessage() {
 			continue
 		}
-		fieldName := p.GetFieldName(message, field)
+		isOneOf := field.OneofIndex != nil
+		fieldName := p.GetOneOfFieldName(message, field)
 		variableName := "this." + fieldName
 		repeated := field.IsRepeated()
 		// Golang's proto3 has no concept of unset primitive fields
@@ -230,6 +231,14 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		if p.fieldIsProto3Map(file, message, field) {
 			p.P(`// Validation of proto3 map<> fields is unsupported.`)
 			continue
+		}
+		if isOneOf {
+			p.In()
+			oneOfName := p.GetFieldName(message, field)
+			oneOfType := p.OneOfTypeName(message, field)
+			//if x, ok := m.GetType().(*OneOfMessage3_OneInt); ok {
+			p.P(`if oneOfNester, ok := this.Get` + oneOfName + `().(* ` + oneOfType + `); ok {`)
+			variableName = "oneOfNester." + p.GetOneOfFieldName(message, field)
 		}
 		if repeated {
 			p.P(`for _, item := range `, variableName, `{`)
@@ -275,6 +284,11 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		}
 		if repeated {
 			// end the repeated loop
+			p.Out()
+			p.P(`}`)
+		}
+		if isOneOf {
+			// end the oneof if statement
 			p.Out()
 			p.P(`}`)
 		}
