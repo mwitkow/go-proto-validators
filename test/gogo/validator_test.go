@@ -6,6 +6,7 @@ package validatortest
 import (
 	"strings"
 	"testing"
+	"github.com/stretchr/testify/assert"
 )
 
 func buildProto3(someString string, someInt uint32, identifier string, someValue int64) *ValidatorMessage3 {
@@ -164,4 +165,58 @@ func TestMapAlwaysPassesUntilFixedProperly(t *testing.T) {
 	if err := example.Validate(); err != nil {
 		t.Fatalf("map validators should always pass")
 	}
+}
+
+
+func TestOneOf_NestedMessage(t *testing.T) {
+	example := &OneOfMessage3{
+		SomeInt: 30,
+		Type: &OneOfMessage3_OneMsg{
+			OneMsg: &ExternalMsg{
+				Identifier: "999", // bad
+				SomeValue:  99,    // good
+			},
+		},
+		Something: &OneOfMessage3_ThreeInt{
+			ThreeInt: 100, // > 20
+		},
+	}
+	err := example.Validate()
+	assert.Error(t, err, "nested message in oneof should fail validation on ExternalMsg")
+	assert.Contains(t, err.Error(), "OneMsg.Identifier", "error must err on the ExternalMsg.Identifier")
+}
+
+func TestOneOf_NestedInt(t *testing.T) {
+	example := &OneOfMessage3{
+		SomeInt: 30,
+		Type: &OneOfMessage3_OneMsg{
+			OneMsg: &ExternalMsg{
+				Identifier: "abba", // good
+				SomeValue:  99,     // good
+			},
+		},
+		Something: &OneOfMessage3_ThreeInt{
+			ThreeInt: 19, // > 20
+		},
+	}
+	err := example.Validate()
+	assert.Error(t, err, "nested message in oneof should fail validation on ThreeInt")
+	assert.Contains(t, err.Error(), "ThreeInt", "error must err on the ThreeInt.ThreeInt")
+}
+
+func TestOneOf_Passes(t *testing.T) {
+	example := &OneOfMessage3{
+		SomeInt: 30,
+		Type: &OneOfMessage3_OneMsg{
+			OneMsg: &ExternalMsg{
+				Identifier: "abba", // good
+				SomeValue:  99,     // good
+			},
+		},
+		Something: &OneOfMessage3_FourInt{
+			FourInt: 101, // > 101
+		},
+	}
+	err := example.Validate()
+	assert.NoError(t, err, "This message should pass all validation")
 }
