@@ -22,12 +22,16 @@ extend google.protobuf.FieldOptions {
 message FieldValidator {
   // Uses a Golang RE2-syntax regex to match the field contents.
   optional string regex = 1;
-  // Field value of integer strict greater than this value.
+  // Integer value compared to which the field content should be strictly greater.
   optional int64 int_gt = 2;
-  // Field value of integer strict smaller than this value.
+  // Integer value compared to which the field content should be strictly smaller.
   optional int64 int_lt = 3;
   // Used for nested message types, requires that the message type exists.
   optional bool msg_exists = 4;
   // Human error specifies a user-customizable error that is visible to the user.
   optional string human_error = 5;
+  // Floating-point value compared to which the field content should be greater or equal.
+  optional double flt_gte = 6;
+  // Floating-point value compared to which the field content should be smaller or equal.
+  optional double flt_lte = 7;
 }

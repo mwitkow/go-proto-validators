@@ -19,6 +19,8 @@ import "github.com/mwitkow/go-proto-validators/validator.proto";
 message InnerMessage {
   // some_integer can only be in range (1, 100).
   int32 some_integer = 1 [(validator.field) = {int_gt: 0, int_lt: 100}];
+  // some_float can only be in range (0;1).
+  double some_float = 2 [(validator.field) = {flt_gte: 0, flt_lte: 1}];
 }
 
 message OuterMessage {
@@ -42,6 +44,12 @@ func (this *InnerMessage) Validate() error {
 	}
 	if !(this.SomeInteger < 100) {
 		return fmt.Errorf("validation error: InnerMessage.SomeInteger must be less than '100'")
+	}
+	if !(this.SomeFloat >= 0) {
+		return fmt.Errorf("validation error: InnerMessage.SomeFloat must be greater than or equal to '0'")
+	}
+	if !(this.SomeFloat <= 1) {
+		return fmt.Errorf("validation error: InnerMessage.SomeFloat must be less than or equal to '1'")
 	}
 	return nil
 }

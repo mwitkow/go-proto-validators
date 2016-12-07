@@ -129,6 +129,18 @@ func (p *plugin) isSupportedInt(field *descriptor.FieldDescriptorProto) bool {
 	return false
 }
 
+func (p *plugin) isSupportedFloat(field *descriptor.FieldDescriptorProto) bool {
+	switch *(field.Type) {
+	case descriptor.FieldDescriptorProto_TYPE_FLOAT, descriptor.FieldDescriptorProto_TYPE_DOUBLE:
+		return true
+	case descriptor.FieldDescriptorProto_TYPE_FIXED32, descriptor.FieldDescriptorProto_TYPE_FIXED64:
+		return true
+	case descriptor.FieldDescriptorProto_TYPE_SFIXED32, descriptor.FieldDescriptorProto_TYPE_SFIXED64:
+		return true
+	}
+	return false
+}
+
 func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	for _, field := range message.Field {
@@ -147,11 +159,11 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 	p.In()
 	for _, field := range message.Field {
 		fieldName := p.GetFieldName(message, field)
-		fieldValudator := getFieldValidatorIfAny(field)
-		if fieldValudator == nil && !field.IsMessage() {
+		fieldValidator := getFieldValidatorIfAny(field)
+		if fieldValidator == nil && !field.IsMessage() {
 			continue
 		}
-		if p.validatorWithMessageExists(fieldValudator) {
+		if p.validatorWithMessageExists(fieldValidator) {
 			fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is a proto2 message, validator.msg_exists has no effect\n", ccTypeName, fieldName)
 		}
 		variableName := "this." + fieldName
@@ -173,9 +185,11 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 			variableName = `this.Get` + fieldName + `()`
 		}
 		if field.IsString() {
-			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValudator)
+			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if p.isSupportedInt(field) {
-			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValudator)
+			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValidator)
+		} else if p.isSupportedFloat(field) {
+			p.generateFloatValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if field.IsMessage() {
 			if repeated && nullable {
 				variableName = "*(item)"
@@ -237,6 +251,8 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if p.isSupportedInt(field) {
 			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValidator)
+		} else if p.isSupportedFloat(field) {
+			p.generateFloatValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if field.IsMessage() {
 			if p.validatorWithMessageExists(fieldValidator) {
 				if nullable && !repeated {
@@ -286,7 +302,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 
 func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if fv.IntGt != nil {
-		p.P(`if !(`, variableName, ` > `, fv.IntGt, `){`)
+		p.P(`if !(`, variableName, ` > `, fv.IntGt, `) {`)
 		p.In()
 		errorStr := fmt.Sprintf(`must be greater than '%d'`, fv.GetIntGt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
@@ -294,9 +310,28 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 		p.P(`}`)
 	}
 	if fv.IntLt != nil {
-		p.P(`if !(`, variableName, ` < `, fv.IntLt, `){`)
+		p.P(`if !(`, variableName, ` < `, fv.IntLt, `) {`)
 		p.In()
 		errorStr := fmt.Sprintf(`must be less than '%d'`, fv.GetIntLt())
+		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		p.Out()
+		p.P(`}`)
+	}
+}
+
+func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+	if fv.FltGte != nil {
+		p.P(`if !(`, variableName, ` >= `, fv.FltGte, `) {`)
+		p.In()
+		errorStr := fmt.Sprintf(`must be greater than or equal to '%f'`, fv.GetFltGte())
+		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		p.Out()
+		p.P(`}`)
+	}
+	if fv.FltLte != nil {
+		p.P(`if !(`, variableName, ` <= `, fv.FltLte, `) {`)
+		p.In()
+		errorStr := fmt.Sprintf(`must be smaller than or equal to '%f'`, fv.GetFltLte())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
@@ -314,7 +349,7 @@ func (p *plugin) generateStringValidator(variableName string, ccTypeName string,
 	}
 }
 
-func (p * plugin) generateErrorString(variableName string, fieldName string, specificError string, fv *validator.FieldValidator) {
+func (p *plugin) generateErrorString(variableName string, fieldName string, specificError string, fv *validator.FieldValidator) {
 	if fv.GetHumanError() == "" {
 		p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`value '%v' must ", specificError, "`", `, `, variableName, `))`)
 	} else {

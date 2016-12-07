@@ -28,6 +28,8 @@ message ValidatorMessage3 {
 	repeated Embedded someEmbeddedRepNonNullable = 15 [(gogoproto.nullable) = false];
 
 	int32 CustomErrorInt = 16 [(validator.field) = {int_lt: 10, human_error: "My Custom Error"}];
+
+	double SomeFloat = 17 [(validator.field) = {flt_gte: 0, flt_lte: 1}];
 }
 
 
