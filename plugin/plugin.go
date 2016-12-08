@@ -320,18 +320,79 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 }
 
 func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	if fv.FltGte != nil {
-		p.P(`if !(`, variableName, ` >= `, fv.FltGte, `) {`)
+	upperIsStrict := true
+	lowerIsStrict := true
+
+	// First check for incompatible constraints (i.e flt_lt & flt_lte both defined, etc) and determine the real limits.
+	if fv.FloatEpsilon != nil && fv.FloatLt == nil && fv.FloatGt == nil {
+		fmt.Fprintf(os.Stderr, "WARNING: field %v.%v has no 'float_lt' or 'float_gt' field so setting 'float_epsilon' has no effect.", ccTypeName, fieldName)
+	}
+	if fv.FloatLt != nil && fv.FloatLte != nil {
+		fmt.Fprintf(os.Stderr, "WARNING: field %v.%v has both 'float_lt' and 'float_lte' constraints, only the strictest will be used.", ccTypeName, fieldName)
+		strictLimit := fv.GetFloatLt()
+		if fv.FloatEpsilon != nil {
+			strictLimit += fv.GetFloatEpsilon()
+		}
+
+		if fv.GetFloatLte() < strictLimit {
+			upperIsStrict = false
+		}
+	} else if fv.FloatLte != nil {
+		upperIsStrict = false
+	}
+
+	if fv.FloatGt != nil && fv.FloatGte != nil {
+		fmt.Fprintf(os.Stderr, "WARNING: field %v.%v has both 'float_gt' and 'float_gte' constraints, only the strictest will be used.", ccTypeName, fieldName)
+		strictLimit := fv.GetFloatGt()
+		if fv.FloatEpsilon != nil {
+			strictLimit -= fv.GetFloatEpsilon()
+		}
+
+		if fv.GetFloatGte() > strictLimit {
+			lowerIsStrict = false
+		}
+	} else if fv.FloatGte != nil {
+		lowerIsStrict = false
+	}
+
+	// Generate the constraint checking code.
+	errorStr := ""
+	compareStr := ""
+	if fv.FloatGt != nil || fv.FloatGte != nil {
+		compareStr = fmt.Sprint(`if !(`, variableName)
+		if lowerIsStrict {
+			errorStr = fmt.Sprintf(`must be strictly greater than '%g'`, fv.GetFloatGt())
+			if fv.FloatEpsilon != nil {
+				errorStr += fmt.Sprintf(` with a tolerance of '%g'`, fv.GetFloatEpsilon())
+				compareStr += fmt.Sprint(` + `, fv.GetFloatEpsilon())
+			}
+			compareStr += fmt.Sprint(` > `, fv.GetFloatGt(), `) {`)
+		} else {
+			errorStr = fmt.Sprintf(`must be greater than or equal to '%g'`, fv.GetFloatGte())
+			compareStr += fmt.Sprint(` >= `, fv.GetFloatGte(), `) {`)
+		}
+		p.P(compareStr)
 		p.In()
-		errorStr := fmt.Sprintf(`must be greater than or equal to '%f'`, fv.GetFltGte())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
 	}
-	if fv.FltLte != nil {
-		p.P(`if !(`, variableName, ` <= `, fv.FltLte, `) {`)
+
+	if fv.FloatLt != nil || fv.FloatLte != nil {
+		compareStr = fmt.Sprint(`if !(`, variableName)
+		if upperIsStrict {
+			errorStr = fmt.Sprintf(`must be strictly lower than '%g'`, fv.GetFloatLt())
+			if fv.FloatEpsilon != nil {
+				errorStr += fmt.Sprintf(` with a tolerance of '%g'`, fv.GetFloatEpsilon())
+				compareStr += fmt.Sprint(` - `, fv.GetFloatEpsilon())
+			}
+			compareStr += fmt.Sprint(` < `, fv.GetFloatLt(), `) {`)
+		} else {
+			errorStr = fmt.Sprintf(`must be lower than or equal to '%g'`, fv.GetFloatLte())
+			compareStr += fmt.Sprint(` <= `, fv.GetFloatLte(), `) {`)
+		}
+		p.P(compareStr)
 		p.In()
-		errorStr := fmt.Sprintf(`must be smaller than or equal to '%f'`, fv.GetFltLte())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
