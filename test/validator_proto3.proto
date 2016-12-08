@@ -28,6 +28,14 @@ message ValidatorMessage3 {
 	repeated Embedded someEmbeddedRepNonNullable = 15 [(gogoproto.nullable) = false];
 
 	int32 CustomErrorInt = 16 [(validator.field) = {int_lt: 10, human_error: "My Custom Error"}];
+
+	// With this epsilon value, the limits become
+	//	SomeFloat+0.05 > 0.35
+	// 	SomeFloat-0.05 < 0.65
+	double SomeDouble = 17 [(validator.field) = {float_gt: 0.35, float_lt: 0.65, float_epsilon: 0.05}];
+	repeated double SomeDoubleRep = 19 [(validator.field) = {float_gt: 0.35, float_lt: 0.65, float_epsilon: 0.05}];
+	repeated double SomeDoubleRepNonNull = 20 [(validator.field) = {float_gt: 0.35, float_lt: 0.65, float_epsilon: 0.05}, (gogoproto.nullable) = false];
+	float SomeFloat = 21 [(validator.field) = {float_gt: 0.35, float_lt: 0.65, float_epsilon: 0.05}];
+	repeated float SomeFloatRep = 22 [(validator.field) = {float_gt: 0.35, float_lt: 0.65, float_epsilon: 0.05}];
+	repeated float SomeFloatRepNonNull = 23 [(validator.field) = {float_gt: 0.35, float_lt: 0.65, float_epsilon: 0.05}, (gogoproto.nullable) = false];
 }
-
-
