@@ -131,9 +131,11 @@ func (p *plugin) isSupportedInt(field *descriptor.FieldDescriptorProto) bool {
 
 func (p *plugin) isSupportedFloat(field *descriptor.FieldDescriptorProto) bool {
 	switch *(field.Type) {
-	case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
+	case descriptor.FieldDescriptorProto_TYPE_FLOAT, descriptor.FieldDescriptorProto_TYPE_DOUBLE:
 		return true
-	case descriptor.FieldDescriptorProto_TYPE_FLOAT:
+	case descriptor.FieldDescriptorProto_TYPE_FIXED32, descriptor.FieldDescriptorProto_TYPE_FIXED64:
+		return true
+	case descriptor.FieldDescriptorProto_TYPE_SFIXED32, descriptor.FieldDescriptorProto_TYPE_SFIXED64:
 		return true
 	}
 	return false
@@ -157,11 +159,11 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 	p.In()
 	for _, field := range message.Field {
 		fieldName := p.GetFieldName(message, field)
-		fieldValudator := getFieldValidatorIfAny(field)
-		if fieldValudator == nil && !field.IsMessage() {
+		fieldValidator := getFieldValidatorIfAny(field)
+		if fieldValidator == nil && !field.IsMessage() {
 			continue
 		}
-		if p.validatorWithMessageExists(fieldValudator) {
+		if p.validatorWithMessageExists(fieldValidator) {
 			fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is a proto2 message, validator.msg_exists has no effect\n", ccTypeName, fieldName)
 		}
 		variableName := "this." + fieldName
@@ -183,11 +185,11 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 			variableName = `this.Get` + fieldName + `()`
 		}
 		if field.IsString() {
-			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValudator)
+			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if p.isSupportedInt(field) {
-			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValudator)
+			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if p.isSupportedFloat(field) {
-			p.generateFloatValidator(variableName, ccTypeName, fieldName, fieldValudator)
+			p.generateFloatValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if field.IsMessage() {
 			if repeated && nullable {
 				variableName = "*(item)"
@@ -300,7 +302,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 
 func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if fv.IntGt != nil {
-		p.P(`if !(`, variableName, ` > `, fv.IntGt, `){`)
+		p.P(`if !(`, variableName, ` > `, fv.IntGt, `) {`)
 		p.In()
 		errorStr := fmt.Sprintf(`must be greater than '%d'`, fv.GetIntGt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
@@ -308,7 +310,7 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 		p.P(`}`)
 	}
 	if fv.IntLt != nil {
-		p.P(`if !(`, variableName, ` < `, fv.IntLt, `){`)
+		p.P(`if !(`, variableName, ` < `, fv.IntLt, `) {`)
 		p.In()
 		errorStr := fmt.Sprintf(`must be less than '%d'`, fv.GetIntLt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
@@ -318,26 +320,79 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 }
 
 func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	if fv.FloatGt != nil {
-		compStr := fmt.Sprint(`if !(`, variableName)
+	upperIsStrict := true
+	lowerIsStrict := true
+
+	// First check for incompatible constraints (i.e flt_lt & flt_lte both defined, etc) and determine the real limits.
+	if fv.FloatEpsilon != nil && fv.FloatLt == nil && fv.FloatGt == nil {
+		fmt.Fprintf(os.Stderr, "WARNING: field %v.%v has no 'float_lt' or 'float_gt' field so setting 'float_epsilon' has no effect.", ccTypeName, fieldName)
+	}
+	if fv.FloatLt != nil && fv.FloatLte != nil {
+		fmt.Fprintf(os.Stderr, "WARNING: field %v.%v has both 'float_lt' and 'float_lte' constraints, only the strictest will be used.", ccTypeName, fieldName)
+		strictLimit := fv.GetFloatLt()
 		if fv.FloatEpsilon != nil {
-			compStr += fmt.Sprint(`+`, fv.GetFloatEpsilon())
+			strictLimit += fv.GetFloatEpsilon()
 		}
-		p.P(compStr, ` > `, fv.FloatGt, `){`)
+
+		if fv.GetFloatLte() < strictLimit {
+			upperIsStrict = false
+		}
+	} else if fv.FloatLte != nil {
+		upperIsStrict = false
+	}
+
+	if fv.FloatGt != nil && fv.FloatGte != nil {
+		fmt.Fprintf(os.Stderr, "WARNING: field %v.%v has both 'float_gt' and 'float_gte' constraints, only the strictest will be used.", ccTypeName, fieldName)
+		strictLimit := fv.GetFloatGt()
+		if fv.FloatEpsilon != nil {
+			strictLimit -= fv.GetFloatEpsilon()
+		}
+
+		if fv.GetFloatGte() > strictLimit {
+			lowerIsStrict = false
+		}
+	} else if fv.FloatGte != nil {
+		lowerIsStrict = false
+	}
+
+	// Generate the constraint checking code.
+	errorStr := ""
+	compareStr := ""
+	if fv.FloatGt != nil || fv.FloatGte != nil {
+		compareStr = fmt.Sprint(`if !(`, variableName)
+		if lowerIsStrict {
+			errorStr = fmt.Sprintf(`must be strictly greater than '%g'`, fv.GetFloatGt())
+			if fv.FloatEpsilon != nil {
+				errorStr += fmt.Sprintf(` with a tolerance of '%g'`, fv.GetFloatEpsilon())
+				compareStr += fmt.Sprint(` + `, fv.GetFloatEpsilon())
+			}
+			compareStr += fmt.Sprint(` > `, fv.GetFloatGt(), `) {`)
+		} else {
+			errorStr = fmt.Sprintf(`must be greater than or equal to '%g'`, fv.GetFloatGte())
+			compareStr += fmt.Sprint(` >= `, fv.GetFloatGte(), `) {`)
+		}
+		p.P(compareStr)
 		p.In()
-		errorStr := fmt.Sprintf(`must be greater than '%g'`, fv.GetFloatGt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
 	}
-	if fv.FloatLt != nil {
-		compStr := fmt.Sprint(`if !(`, variableName)
-		if fv.FloatEpsilon != nil {
-			compStr += fmt.Sprint(`-`, fv.GetFloatEpsilon())
+
+	if fv.FloatLt != nil || fv.FloatLte != nil {
+		compareStr = fmt.Sprint(`if !(`, variableName)
+		if upperIsStrict {
+			errorStr = fmt.Sprintf(`must be strictly lower than '%g'`, fv.GetFloatLt())
+			if fv.FloatEpsilon != nil {
+				errorStr += fmt.Sprintf(` with a tolerance of '%g'`, fv.GetFloatEpsilon())
+				compareStr += fmt.Sprint(` - `, fv.GetFloatEpsilon())
+			}
+			compareStr += fmt.Sprint(` < `, fv.GetFloatLt(), `) {`)
+		} else {
+			errorStr = fmt.Sprintf(`must be lower than or equal to '%g'`, fv.GetFloatLte())
+			compareStr += fmt.Sprint(` <= `, fv.GetFloatLte(), `) {`)
 		}
-		p.P(compStr, ` < `, fv.FloatLt, `){`)
+		p.P(compareStr)
 		p.In()
-		errorStr := fmt.Sprintf(`must be less than '%g'`, fv.GetFloatLt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)

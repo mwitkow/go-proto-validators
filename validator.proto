@@ -46,4 +46,8 @@ message FieldValidator {
   // If unset, no correction for floating point inaccuracies in
   // comparisons will be attempted.
   optional double float_epsilon = 8;
+  // Floating-point value compared to which the field content should be greater or equal.
+  optional double float_gte = 9;
+  // Floating-point value compared to which the field content should be smaller or equal.
+  optional double float_lte = 10;
 }
