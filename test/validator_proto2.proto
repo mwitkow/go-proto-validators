@@ -28,7 +28,7 @@ message ValidatorMessage {
 
 	// Embedded message recursive constraint tests.
 	required Embedded embeddedReq = 10;
-	required Embedded embeddedNonNull = 11  [(gogoproto.nullable) = false];
+	required Embedded embeddedNonNull = 11 [(gogoproto.nullable) = false];
 	repeated Embedded embeddedRep = 12;
 	repeated Embedded embeddedRepNonNullable = 13 [(gogoproto.nullable) = false];
 
@@ -60,4 +60,10 @@ message ValidatorMessage {
 
 	// String not-empty constraint tests.
 	required string SomeNonEmptyString = 33 [(validator.field) = {string_not_empty: true}];
+
+	// Repeated base-type without constraint tests.
+	repeated int32 RepeatedBaseType = 34;
+
+	// Repeated element count constraint tests.
+	repeated int32 Repeated = 35 [(validator.field) = {repeated_count_min: 2, repeated_count_max: 5}];
 }

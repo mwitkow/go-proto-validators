@@ -51,6 +51,7 @@ package plugin
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -172,9 +173,12 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 		// For proto2 syntax, only Gogo generates non-pointer fields
 		nonpointer := gogoproto.ImportsGoGoProto(file.FileDescriptorProto) && !gogoproto.IsNullable(field)
 		if repeated {
-			p.P(`for _, item := range `, variableName, `{`)
-			p.In()
-			variableName = "item"
+			p.generateRepeatedCountValidator(variableName, ccTypeName, fieldName, fieldValidator)
+			if field.IsMessage() || p.validatorWithNonRepeatedConstraint(fieldValidator) {
+				p.P(`for _, item := range `, variableName, `{`)
+				p.In()
+				variableName = "item"
+			}
 		} else if nullable {
 			p.P(`if `, variableName, ` != nil {`)
 			p.In()
@@ -183,6 +187,14 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 			// can use the field directly
 		} else if !field.IsMessage() {
 			variableName = `this.Get` + fieldName + `()`
+		}
+		if !repeated && fieldValidator != nil {
+			if fieldValidator.RepeatedCountMin != nil {
+				fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is not repeated, validator.min_elts has no effects\n", ccTypeName, fieldName)
+			}
+			if fieldValidator.RepeatedCountMax != nil {
+				fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is not repeated, validator.max_elts has no effects\n", ccTypeName, fieldName)
+			}
 		}
 		if field.IsString() {
 			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValidator)
@@ -202,8 +214,11 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 		}
 		if repeated {
 			// end the repeated loop
-			p.Out()
-			p.P(`}`)
+			if field.IsMessage() || p.validatorWithNonRepeatedConstraint(fieldValidator) {
+				// This internal 'if' cannot be refactored as it would change semantics with respect to the corresponding prelude 'if's
+				p.Out()
+				p.P(`}`)
+			}
 		} else if nullable {
 			// end the if around nullable
 			p.Out()
@@ -243,9 +258,19 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			variableName = "oneOfNester." + p.GetOneOfFieldName(message, field)
 		}
 		if repeated {
-			p.P(`for _, item := range `, variableName, `{`)
-			p.In()
-			variableName = "item"
+			p.generateRepeatedCountValidator(variableName, ccTypeName, fieldName, fieldValidator)
+			if field.IsMessage() || p.validatorWithNonRepeatedConstraint(fieldValidator) {
+				p.P(`for _, item := range `, variableName, `{`)
+				p.In()
+				variableName = "item"
+			}
+		} else if fieldValidator != nil {
+			if fieldValidator.RepeatedCountMin != nil {
+				fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is not repeated, validator.min_elts has no effects\n", ccTypeName, fieldName)
+			}
+			if fieldValidator.RepeatedCountMax != nil {
+				fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is not repeated, validator.max_elts has no effects\n", ccTypeName, fieldName)
+			}
 		}
 		if field.IsString() {
 			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValidator)
@@ -262,7 +287,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 					p.Out()
 					p.P(`}`)
 				} else if repeated {
-					fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is a repeated, validator.msg_exists has no effect\n", ccTypeName, fieldName)
+					fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is repeated, validator.msg_exists has no effect\n", ccTypeName, fieldName)
 				} else if !nullable {
 					fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is a nullable=false, validator.msg_exists has no effect\n", ccTypeName, fieldName)
 				}
@@ -284,7 +309,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				p.P(`}`)
 			}
 		}
-		if repeated {
+		if repeated && (field.IsMessage() || p.validatorWithNonRepeatedConstraint(fieldValidator)) {
 			// end the repeated loop
 			p.Out()
 			p.P(`}`)
@@ -418,6 +443,30 @@ func (p *plugin) generateStringValidator(variableName string, ccTypeName string,
 	}
 }
 
+func (p *plugin) generateRepeatedCountValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+	if fv == nil {
+		return
+	}
+	if fv.RepeatedCountMin != nil {
+		compareStr := fmt.Sprint(`if len(`, variableName, `) < `, fv.GetRepeatedCountMin(), ` {`)
+		p.P(compareStr)
+		p.In()
+		errorStr := fmt.Sprint(`contain at least `, fv.GetRepeatedCountMin(), ` elements`)
+		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		p.Out()
+		p.P(`}`)
+	}
+	if fv.RepeatedCountMax != nil {
+		compareStr := fmt.Sprint(`if len(`, variableName, `) > `, fv.GetRepeatedCountMax(), ` {`)
+		p.P(compareStr)
+		p.In()
+		errorStr := fmt.Sprint(`contain at most `, fv.GetRepeatedCountMax(), ` elements`)
+		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		p.Out()
+		p.P(`}`)
+	}
+}
+
 func (p *plugin) generateErrorString(variableName string, fieldName string, specificError string, fv *validator.FieldValidator) {
 	if fv.GetHumanError() == "" {
 		p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`value '%v' must ", specificError, "`", `, `, variableName, `))`)
@@ -465,8 +514,38 @@ func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *gener
 	return msg.GetOptions().GetMapEntry()
 }
 
+func (p *plugin) validatorWithAnyConstraint(fv *validator.FieldValidator) bool {
+	if fv == nil {
+		return false
+	}
+
+	// Need to use reflection in order to be future-proof for new types of constraints.
+	v := reflect.ValueOf(fv)
+	for i := 0; i < v.NumField(); i++ {
+		if v.Field(i).Interface() != nil {
+			return true
+		}
+	}
+	return false
+}
+
 func (p *plugin) validatorWithMessageExists(fv *validator.FieldValidator) bool {
 	return fv != nil && fv.MsgExists != nil && *(fv.MsgExists)
+}
+
+func (p *plugin) validatorWithNonRepeatedConstraint(fv *validator.FieldValidator) bool {
+	if fv == nil {
+		return false
+	}
+
+	// Need to use reflection in order to be future-proof for new types of constraints.
+	v := reflect.ValueOf(*fv)
+	for i := 0; i < v.NumField(); i++ {
+		if v.Type().Field(i).Name != "RepeatedCountMin" && v.Type().Field(i).Name != "RepeatedCountMax" && v.Field(i).Pointer() != 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *plugin) regexName(ccTypeName string, fieldName string) string {
