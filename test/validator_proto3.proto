@@ -52,4 +52,7 @@ message ValidatorMessage3 {
 	float SomeFloat = 27 [(validator.field) = {float_gte: 0.25, float_lte: 0.75}];
 	repeated float SomeFloatRep = 28 [(validator.field) = {float_gte: 0.25, float_lte: 0.75}];
 	repeated float SomeFloatRepNonNull = 30 [(validator.field) = {float_gte: 0.25, float_lte: 0.75}];
+
+	// String not-empty constraint tests.
+	string SomeNonEmptyString = 31 [(validator.field) = {string_not_empty: true}];
 }

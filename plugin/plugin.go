@@ -304,7 +304,7 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 	if fv.IntGt != nil {
 		p.P(`if !(`, variableName, ` > `, fv.IntGt, `) {`)
 		p.In()
-		errorStr := fmt.Sprintf(`must be greater than '%d'`, fv.GetIntGt())
+		errorStr := fmt.Sprintf(`be greater than '%d'`, fv.GetIntGt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
@@ -312,7 +312,7 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 	if fv.IntLt != nil {
 		p.P(`if !(`, variableName, ` < `, fv.IntLt, `) {`)
 		p.In()
-		errorStr := fmt.Sprintf(`must be less than '%d'`, fv.GetIntLt())
+		errorStr := fmt.Sprintf(`be less than '%d'`, fv.GetIntLt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
@@ -361,14 +361,14 @@ func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, 
 	if fv.FloatGt != nil || fv.FloatGte != nil {
 		compareStr = fmt.Sprint(`if !(`, variableName)
 		if lowerIsStrict {
-			errorStr = fmt.Sprintf(`must be strictly greater than '%g'`, fv.GetFloatGt())
+			errorStr = fmt.Sprintf(`be strictly greater than '%g'`, fv.GetFloatGt())
 			if fv.FloatEpsilon != nil {
 				errorStr += fmt.Sprintf(` with a tolerance of '%g'`, fv.GetFloatEpsilon())
 				compareStr += fmt.Sprint(` + `, fv.GetFloatEpsilon())
 			}
 			compareStr += fmt.Sprint(` > `, fv.GetFloatGt(), `) {`)
 		} else {
-			errorStr = fmt.Sprintf(`must be greater than or equal to '%g'`, fv.GetFloatGte())
+			errorStr = fmt.Sprintf(`be greater than or equal to '%g'`, fv.GetFloatGte())
 			compareStr += fmt.Sprint(` >= `, fv.GetFloatGte(), `) {`)
 		}
 		p.P(compareStr)
@@ -381,14 +381,14 @@ func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, 
 	if fv.FloatLt != nil || fv.FloatLte != nil {
 		compareStr = fmt.Sprint(`if !(`, variableName)
 		if upperIsStrict {
-			errorStr = fmt.Sprintf(`must be strictly lower than '%g'`, fv.GetFloatLt())
+			errorStr = fmt.Sprintf(`be strictly lower than '%g'`, fv.GetFloatLt())
 			if fv.FloatEpsilon != nil {
 				errorStr += fmt.Sprintf(` with a tolerance of '%g'`, fv.GetFloatEpsilon())
 				compareStr += fmt.Sprint(` - `, fv.GetFloatEpsilon())
 			}
 			compareStr += fmt.Sprint(` < `, fv.GetFloatLt(), `) {`)
 		} else {
-			errorStr = fmt.Sprintf(`must be lower than or equal to '%g'`, fv.GetFloatLte())
+			errorStr = fmt.Sprintf(`be lower than or equal to '%g'`, fv.GetFloatLte())
 			compareStr += fmt.Sprint(` <= `, fv.GetFloatLte(), `) {`)
 		}
 		p.P(compareStr)
@@ -403,7 +403,15 @@ func (p *plugin) generateStringValidator(variableName string, ccTypeName string,
 	if fv.Regex != nil {
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 		p.In()
-		errorStr := "must conform to regex " + strconv.Quote(fv.GetRegex())
+		errorStr := "be a string conforming to regex " + strconv.Quote(fv.GetRegex())
+		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		p.Out()
+		p.P(`}`)
+	}
+	if fv.StringNotEmpty != nil && fv.GetStringNotEmpty() {
+		p.P(`if `, variableName, ` == "" {`)
+		p.In()
+		errorStr := "not be an empty string"
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)

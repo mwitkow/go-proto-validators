@@ -50,4 +50,6 @@ message FieldValidator {
   optional double float_gte = 9;
   // Floating-point value compared to which the field content should be smaller or equal.
   optional double float_lte = 10;
+  // Used for string fields, requires the string to be not empty (i.e different from "").
+  optional bool string_not_empty = 11;
 }

@@ -57,4 +57,7 @@ message ValidatorMessage {
 	required float SomeFloatReqNonNull = 30 [(validator.field) = {float_gte: 0.25, float_lte: 0.75}, (gogoproto.nullable) = false];
 	repeated float SomeFloatRep = 31 [(validator.field) = {float_gte: 0.25, float_lte: 0.75}];
 	repeated float SomeFloatRepNonNull = 32 [(validator.field) = {float_gte: 0.25, float_lte: 0.75}];
+
+	// String not-empty constraint tests.
+	required string SomeNonEmptyString = 33 [(validator.field) = {string_not_empty: true}];
 }
