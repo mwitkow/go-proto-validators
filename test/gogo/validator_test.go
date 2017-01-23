@@ -6,7 +6,6 @@ package validatortest
 import (
 	"strings"
 	"testing"
-	. "github.com/mwitkow/go-proto-validators/test"
 	"github.com/stretchr/testify/assert"
 )
 var (
