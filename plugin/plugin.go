@@ -182,7 +182,9 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 		} else if nullable {
 			p.P(`if `, variableName, ` != nil {`)
 			p.In()
-			variableName = "*(" + variableName + ")"
+			if !field.IsBytes() {
+				variableName = "*(" + variableName + ")"
+			}
 		} else if nonpointer {
 			// can use the field directly
 		} else if !field.IsMessage() {
@@ -202,6 +204,8 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if p.isSupportedFloat(field) {
 			p.generateFloatValidator(variableName, ccTypeName, fieldName, fieldValidator)
+		} else if (field.IsBytes()) {
+			p.generateLengthValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if field.IsMessage() {
 			if repeated && nullable {
 				variableName = "*(item)"
@@ -278,6 +282,8 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if p.isSupportedFloat(field) {
 			p.generateFloatValidator(variableName, ccTypeName, fieldName, fieldValidator)
+		} else if (field.IsBytes()) {
+			p.generateLengthValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if field.IsMessage() {
 			if p.validatorWithMessageExists(fieldValidator) {
 				if nullable && !repeated {
@@ -342,6 +348,36 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 		p.Out()
 		p.P(`}`)
 	}
+}
+
+func (p *plugin) generateLengthValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+	if fv.LengthGt != nil {
+		p.P(`if !( len(`, variableName, `) > `, fv.LengthGt, `) {`)
+		p.In()
+		errorStr := fmt.Sprintf(`be greater than '%d'`, fv.GetLengthGt())
+		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		p.Out()
+		p.P(`}`)
+	}
+
+	if fv.LengthLt != nil {
+		p.P(`if !( len(`, variableName, `) < `, fv.LengthLt, `) {`)
+		p.In()
+		errorStr := fmt.Sprintf(`be greater than '%d'`, fv.GetLengthLt())
+		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		p.Out()
+		p.P(`}`)
+	}
+
+	if fv.LengthEq != nil {
+		p.P(`if !( len(`, variableName, `) == `, fv.LengthEq, `) {`)
+		p.In()
+		errorStr := fmt.Sprintf(`be equal '%d'`, fv.GetLengthEq())
+		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		p.Out()
+		p.P(`}`)
+	}
+
 }
 
 func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
@@ -441,6 +477,8 @@ func (p *plugin) generateStringValidator(variableName string, ccTypeName string,
 		p.Out()
 		p.P(`}`)
 	}
+	p.generateLengthValidator(variableName, ccTypeName, fieldName, fv)
+
 }
 
 func (p *plugin) generateRepeatedCountValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
