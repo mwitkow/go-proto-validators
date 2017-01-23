@@ -14,7 +14,8 @@ var (
 	stableBytes = make([]byte,12)
 )
 func buildProto3(someString string, someInt uint32, identifier string, someValue int64, someDoubleStrict float64,
-someFloatStrict float32, someDouble float64, someFloat float32, nonEmptyString string, repeatedCount uint32, someStringLength string, someBytes []byte) *ValidatorMessage3 {
+someFloatStrict float32, someDouble float64, someFloat float32, nonEmptyString string, repeatedCount uint32,
+someStringLength string, someBytes []byte) *ValidatorMessage3 {
 	goodEmbeddedProto3 := &ValidatorMessage3_Embedded{
 		Identifier: identifier,
 		SomeValue:  someValue,
