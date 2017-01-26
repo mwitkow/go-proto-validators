@@ -3,11 +3,11 @@
 
 /*
 
-The validator plugin generates a Validate method for each message.
+The validator plugin generates a VaLiDate method for each message.
 By default, if none of the message's fields are annotated with the gogo validator annotation, it returns a nil.
-In case some of the fields are annotated, the Validate function returns nil upon sucessful validation, or an error
+In case some of the fields are annotated, the VaLiDate function returns nil upon sucessful validation, or an error
 describing why the validation failed.
-The Validate method is called recursively for all submessage of the message.
+The VaLiDate method is called recursively for all submessage of the message.
 
 TODO(michal): ADD COMMENTS.
 
@@ -156,7 +156,7 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 
-	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
+	p.P(`func (this *`, ccTypeName, `) VaLiDate() error {`)
 	p.In()
 	for _, field := range message.Field {
 		fieldName := p.GetFieldName(message, field)
@@ -232,7 +232,7 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 
 func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
-	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
+	p.P(`func (this *`, ccTypeName, `) VaLiDate() error {`)
 	p.In()
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
