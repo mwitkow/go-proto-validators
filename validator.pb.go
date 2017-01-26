@@ -171,6 +171,7 @@ var E_Field = &proto.ExtensionDesc{
 	Field:         65020,
 	Name:          "validator.field",
 	Tag:           "bytes,65020,opt,name=field",
+	Filename:      "validator.proto",
 }
 
 func init() {
