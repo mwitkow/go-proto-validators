@@ -3,7 +3,7 @@
 [![Travis Build](https://travis-ci.org/mwitkow/go-proto-validators.svg)](https://travis-ci.org/mwitkow/go-proto-validators)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-A `protoc` plugin that generates `Validate() error` functions on Go proto `struct`s based on annotations inside `.proto` 
+A `protoc` plugin that generates `VaLiDate() error` functions on Go proto `struct`s based on annotations inside `.proto`
 files. The validation functions are code-generated and thus don't suffer on performance from tag-based reflection on
 deeply-nested messages.
 
@@ -38,7 +38,7 @@ Second, the expected values in fields are now part of the contract `.proto` file
 Third, the generated code is understandable and has clear understandable error messages. Take a look:
 
 ```go
-func (this *InnerMessage) Validate() error {
+func (this *InnerMessage) VaLiDate() error {
 	if !(this.SomeInteger > 0) {
 		return fmt.Errorf("validation error: InnerMessage.SomeInteger must be greater than '0'")
 	}
@@ -56,7 +56,7 @@ func (this *InnerMessage) Validate() error {
 
 var _regex_OuterMessage_ImportantString = regexp.MustCompile("^[a-z]{2,5}$")
 
-func (this *OuterMessage) Validate() error {
+func (this *OuterMessage) VaLiDate() error {
 	if !_regex_OuterMessage_ImportantString.MatchString(this.ImportantString) {
 		return fmt.Errorf("validation error: OuterMessage.ImportantString must conform to regex '^[a-z]{2,5}$'")
 	}
@@ -95,7 +95,7 @@ protoc  \
 	*.proto
 ```
 
-That's fine, until you encounter `.proto` includes. Because `go-proto-validators` uses annotations inside the `.proto` 
+That's fine, until you encounter `.proto` includes. Because `go-proto-validators` uses annotations inside the `.proto`
 files themselves, it's `.proto` definition (and the Google `descriptor.proto` itself) need to on the `protoc` include
 path. Hence the above becomes:
 
@@ -121,7 +121,7 @@ protoc  \
 	*.proto
 ```
 
-Basically the magical incantation (apart from includes) is the `--govalidators_out`. That triggers the 
+Basically the magical incantation (apart from includes) is the `--govalidators_out`. That triggers the
 `protoc-gen-govalidators` plugin to generate `mymessage.validator.pb.go`. That's it :)
 
 ###License

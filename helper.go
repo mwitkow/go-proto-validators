@@ -7,12 +7,12 @@ import "strings"
 
 // Validator is a general interface that allows a message to be validated.
 type Validator interface {
-	Validate() error
+	VaLiDate() error
 }
 
 func CallValidatorIfExists(candidate interface{}) error {
 	if validator, ok := candidate.(Validator); ok {
-		return validator.Validate()
+		return validator.VaLiDate()
 	}
 	return nil
 }
