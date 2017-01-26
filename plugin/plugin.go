@@ -363,7 +363,7 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	if fv.LengthLt != nil {
 		p.P(`if !( len(`, variableName, `) < `, fv.LengthLt, `) {`)
 		p.In()
-		errorStr := fmt.Sprintf(`be greater than '%d'`, fv.GetLengthLt())
+		errorStr := fmt.Sprintf(`be less than '%d'`, fv.GetLengthLt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
