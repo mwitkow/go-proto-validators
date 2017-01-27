@@ -354,7 +354,7 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	if fv.LengthGt != nil {
 		p.P(`if !( len(`, variableName, `) > `, fv.LengthGt, `) {`)
 		p.In()
-		errorStr := fmt.Sprintf(`be greater than '%d'`, fv.GetLengthGt())
+		errorStr := fmt.Sprintf(`length be greater than '%d'`, fv.GetLengthGt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
@@ -363,7 +363,7 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	if fv.LengthLt != nil {
 		p.P(`if !( len(`, variableName, `) < `, fv.LengthLt, `) {`)
 		p.In()
-		errorStr := fmt.Sprintf(`be less than '%d'`, fv.GetLengthLt())
+		errorStr := fmt.Sprintf(`length be less than '%d'`, fv.GetLengthLt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
@@ -372,7 +372,7 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	if fv.LengthEq != nil {
 		p.P(`if !( len(`, variableName, `) == `, fv.LengthEq, `) {`)
 		p.In()
-		errorStr := fmt.Sprintf(`be not equal '%d'`, fv.GetLengthEq())
+		errorStr := fmt.Sprintf(`length be not equal '%d'`, fv.GetLengthEq())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
