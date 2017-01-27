@@ -372,7 +372,7 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	if fv.LengthEq != nil {
 		p.P(`if !( len(`, variableName, `) == `, fv.LengthEq, `) {`)
 		p.In()
-		errorStr := fmt.Sprintf(`be equal '%d'`, fv.GetLengthEq())
+		errorStr := fmt.Sprintf(`be not equal '%d'`, fv.GetLengthEq())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
