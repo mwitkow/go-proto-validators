@@ -14,7 +14,7 @@ Let's take the following `proto3` snippet:
 ```proto
 syntax = "proto3";
 package validator.examples;
-import "github.com/mwitkow/go-proto-validators/validator.proto";
+import "github.com/connectim/go-proto-validators/validator.proto";
 
 message InnerMessage {
   // some_integer can only be in range (1, 100).
