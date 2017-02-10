@@ -126,6 +126,9 @@ func (p *plugin) isSupportedInt(field *descriptor.FieldDescriptorProto) bool {
 		return true
 	case descriptor.FieldDescriptorProto_TYPE_SINT32, descriptor.FieldDescriptorProto_TYPE_SINT64:
 		return true
+	case descriptor.FieldDescriptorProto_TYPE_ENUM:
+		return true
+
 	}
 	return false
 }
