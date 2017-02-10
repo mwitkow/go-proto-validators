@@ -128,7 +128,6 @@ func (p *plugin) isSupportedInt(field *descriptor.FieldDescriptorProto) bool {
 		return true
 	case descriptor.FieldDescriptorProto_TYPE_ENUM:
 		return true
-
 	}
 	return false
 }
@@ -329,22 +328,26 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 }
 
 func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	if fv.IntGt != nil {
-		p.P(`if !(`, variableName, ` > `, fv.IntGt, `) {`)
+	print := func(cmpStr string, errStr string) {
+		p.P(`if !(`, variableName, cmpStr, `) {`)
 		p.In()
-		errorStr := fmt.Sprintf(`be greater than '%d'`, fv.GetIntGt())
-		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		p.generateErrorString(variableName, fieldName, errStr, fv)
 		p.Out()
 		p.P(`}`)
+	}
+	if fv.IntGt != nil {
+		print(fmt.Sprintf(` > %d`, *fv.IntGt), fmt.Sprintf(`be greater than '%d'`, *fv.IntGt))
+	}
+	if fv.IntGte != nil {
+		print(fmt.Sprintf(` >= %d`, *fv.IntGte), fmt.Sprintf(`be  equal or greater than  '%d'`, *fv.IntGte))
 	}
 	if fv.IntLt != nil {
-		p.P(`if !(`, variableName, ` < `, fv.IntLt, `) {`)
-		p.In()
-		errorStr := fmt.Sprintf(`be less than '%d'`, fv.GetIntLt())
-		p.generateErrorString(variableName, fieldName, errorStr, fv)
-		p.Out()
-		p.P(`}`)
+		print(fmt.Sprintf(` < %d`, *fv.IntLt), fmt.Sprintf(`be smaller than '%d'`, *fv.IntLt))
 	}
+	if fv.IntLte != nil {
+		print(fmt.Sprintf(` <= %d`, *fv.IntLte), fmt.Sprintf(`be equal or smaller than '%d'`, *fv.IntLte))
+	}
+
 }
 
 func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {

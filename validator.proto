@@ -56,4 +56,8 @@ message FieldValidator {
   optional int64 repeated_count_min = 12;
   // Repeated field with at most this number of elements.
   optional int64 repeated_count_max = 13;
+  // Field value of integer  should be greater or equal.
+  optional int64 int_gte = 14;
+  // Field value of integer  should be smaller or equal.
+  optional int64 int_lte = 15;
 }
