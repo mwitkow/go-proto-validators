@@ -39,6 +39,12 @@ func (this *InnerMessage) Validate() error {
 	if !(this.Type <= 5) {
 		return github_com_mwitkow_go_proto_validators.FieldError("Type", fmt.Errorf(`value '%v' must be equal or smaller than '5'`, this.Type))
 	}
+	if !(len(this.Content) >= 3) {
+		return github_com_mwitkow_go_proto_validators.FieldError("Content", fmt.Errorf(`value '%v' must string length equal or greater than 3`, this.Content))
+	}
+	if !(len(this.Content) <= 15) {
+		return github_com_mwitkow_go_proto_validators.FieldError("Content", fmt.Errorf(`value '%v' must string length equal or smaller than 15`, this.Content))
+	}
 	return nil
 }
 

@@ -60,4 +60,18 @@ message FieldValidator {
   optional int64 int_gte = 14;
   // Field value of integer  should be smaller or equal.
   optional int64 int_lte = 15;
+
+  // Used for string fields'length.the meaning of sufix is the same as above
+  optional int64 string_length_lt = 16;
+  optional int64 string_length_lte = 17;
+  optional int64 string_length_gt = 18;
+  optional int64 string_length_gte = 19;
+
+  // Used for string fields' rune length:like chinese "您",string length is 3,but rune is 1
+  // the meaning of sufix is the same as above
+  optional int64 rune_length_lt = 20;
+  optional int64 rune_length_lte = 21;
+  optional int64 rune_length_gt = 22;
+  optional int64 rune_length_gte = 23;
+
 }

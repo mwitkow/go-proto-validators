@@ -61,4 +61,12 @@ message ValidatorMessage3 {
 
 	// Repeated element count constraint tests.
 	repeated int32 Repeated = 33 [(validator.field) = {repeated_count_min: 2, repeated_count_max: 5}];
+
+	// strict upper and lower bounds for integer
+	uint32 SomeIntE = 41 [(validator.field) = {int_gte: 20,int_lte: 30}];
+
+	// character length
+	string SomeStringLength = 51 [(validator.field) = {string_length_gte: 2,string_length_lte: 6}];
+	string SomeStringRuneLength = 52 [(validator.field) = {rune_length_gte: 2,rune_length_lte: 6}];
+
 }

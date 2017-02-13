@@ -17,14 +17,16 @@ func buildProto3(someString string, someInt uint32, identifier string, someValue
 	}
 
 	goodProto3 := &ValidatorMessage3{
-		SomeString:         someString,
-		SomeStringRep:      []string{someString, "xyz34"},
-		SomeStringNoQuotes: someString,
+		SomeString:           someString,
+		SomeStringRep:        []string{someString, "xyz34"},
+		SomeStringNoQuotes:   someString,
+		SomeStringLength:     "abc",
+		SomeStringRuneLength: "您好啊",
 
-		SomeInt:           someInt,
-		SomeIntRep:        []uint32{someInt, 12, 13, 14, 15, 16},
-		SomeIntRepNonNull: []uint32{someInt, 102},
-
+		SomeInt:                    someInt,
+		SomeIntRep:                 []uint32{someInt, 12, 13, 14, 15, 16},
+		SomeIntRepNonNull:          []uint32{someInt, 102},
+		SomeIntE:                   25,
 		SomeEmbedded:               nil,
 		SomeEmbeddedNonNullable:    goodEmbeddedProto3,
 		SomeEmbeddedExists:         goodEmbeddedProto3,
@@ -60,7 +62,8 @@ func buildProto2(someString string, someInt uint32, identifier string, someValue
 		Identifier: &identifier,
 		SomeValue:  &someValue,
 	}
-
+	someIntE := new(uint32)
+	*someIntE = 25
 	goodProto2 := &ValidatorMessage{
 		StringReq:        &someString,
 		StringReqNonNull: &someString,
@@ -72,6 +75,7 @@ func buildProto2(someString string, someInt uint32, identifier string, someValue
 		IntReqNonNull: &someInt,
 		IntRep:        []uint32{someInt, 12, 13, 14, 15, 16},
 		IntRepNonNull: []uint32{someInt, 12, 13, 14, 15, 16},
+		SomeIntE:      someIntE,
 
 		EmbeddedReq:            goodEmbeddedProto2,
 		EmbeddedNonNull:        goodEmbeddedProto2,
@@ -464,4 +468,58 @@ func TestOneOf_Passes(t *testing.T) {
 	}
 	err := example.Validate()
 	assert.NoError(t, err, "This message should pass all validation")
+}
+
+func TestIntStrictUpperLowerBounds(t *testing.T) {
+	strictBounds20_30Proto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4)
+	strictBounds20_30Proto3.SomeIntE = 31
+	assert.NotNil(t, strictBounds20_30Proto3.Validate())
+	strictBounds20_30Proto3.SomeIntE = 30
+	assert.Empty(t, strictBounds20_30Proto3.Validate())
+
+	strictBounds20_30Proto3.SomeIntE = 20
+	assert.Empty(t, strictBounds20_30Proto3.Validate())
+	strictBounds20_30Proto3.SomeIntE = 19
+	assert.NotNil(t, strictBounds20_30Proto3.Validate())
+
+	strictBounds20_30Proto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4)
+	strictBounds20_30Proto2.SomeIntE = puint32(31)
+	assert.NotNil(t, strictBounds20_30Proto2.Validate())
+	strictBounds20_30Proto2.SomeIntE = puint32(30)
+	assert.Empty(t, strictBounds20_30Proto2.Validate())
+
+	strictBounds20_30Proto2.SomeIntE = puint32(20)
+	assert.Empty(t, strictBounds20_30Proto2.Validate())
+	strictBounds20_30Proto2.SomeIntE = puint32(19)
+	assert.NotNil(t, strictBounds20_30Proto2.Validate())
+
+}
+
+func puint32(i uint32) *uint32 {
+	p := new(uint32)
+	*p = uint32(i)
+	return p
+}
+
+func TestCharacterLength(t *testing.T) {
+	characterLength2_6Proto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4)
+	characterLength2_6Proto3.SomeStringLength = "您" // 3 length
+	assert.Empty(t, characterLength2_6Proto3.Validate())
+	characterLength2_6Proto3.SomeStringLength = "1"
+	assert.NotNil(t, characterLength2_6Proto3.Validate())
+	characterLength2_6Proto3.SomeStringLength = "abcdef"
+	assert.Empty(t, characterLength2_6Proto3.Validate())
+	characterLength2_6Proto3.SomeStringLength = "abcdefg"
+	assert.NotNil(t, characterLength2_6Proto3.Validate())
+
+	runeLength2_6Proto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4)
+	runeLength2_6Proto3.SomeStringRuneLength = "您好" // 2 rune
+	assert.Empty(t, runeLength2_6Proto3.Validate())
+	runeLength2_6Proto3.SomeStringRuneLength = "您"
+	assert.NotNil(t, runeLength2_6Proto3.Validate())
+	runeLength2_6Proto3.SomeStringRuneLength = "吃了嘛您呐."
+	assert.Empty(t, runeLength2_6Proto3.Validate())
+	runeLength2_6Proto3.SomeStringRuneLength = "得嘞北京欢迎您"
+	assert.NotNil(t, runeLength2_6Proto3.Validate())
+
 }

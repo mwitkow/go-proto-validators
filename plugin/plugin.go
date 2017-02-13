@@ -431,22 +431,59 @@ func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, 
 }
 
 func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	if fv.Regex != nil {
-		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
+	print := func(logicOpeLine string, errStr string) {
+		p.P(logicOpeLine)
 		p.In()
-		errorStr := "be a string conforming to regex " + strconv.Quote(fv.GetRegex())
-		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		// fmt.Println("err string ::: ", errStr)
+		p.generateErrorString(variableName, fieldName, errStr, fv)
 		p.Out()
 		p.P(`}`)
+	}
+	if fv.Regex != nil {
+		opeLine := `if !` + p.regexName(ccTypeName, fieldName) + `.MatchString(` + variableName + `) {`
+		print(opeLine, "be a string conforming to regex "+strconv.Quote(fv.GetRegex()))
 	}
 	if fv.StringNotEmpty != nil && fv.GetStringNotEmpty() {
-		p.P(`if `, variableName, ` == "" {`)
-		p.In()
-		errorStr := "not be an empty string"
-		p.generateErrorString(variableName, fieldName, errorStr, fv)
-		p.Out()
-		p.P(`}`)
+		print(`if `+variableName+` == "" {`, "not be an empty string")
 	}
+	if fv.StringLengthGt != nil {
+		print(fmt.Sprintf(`if ! (len(%s) > %d){`, variableName, *fv.StringLengthGt),
+			fmt.Sprintf("string length greater than %d", *fv.StringLengthGt))
+	}
+	if fv.StringLengthGte != nil {
+		print(fmt.Sprintf(`if ! (len(%s) >= %d){`, variableName, *fv.StringLengthGte),
+			fmt.Sprintf("string length equal or greater than %d", *fv.StringLengthGte))
+	}
+
+	if fv.StringLengthLt != nil {
+		print(fmt.Sprintf(`if ! (len(%s) < %d){`, variableName, *fv.StringLengthLt),
+			fmt.Sprintf("string length smaller than %d", *fv.StringLengthLt))
+	}
+
+	if fv.StringLengthLte != nil {
+		print(fmt.Sprintf(`if ! (len(%s) <= %d){`, variableName, *fv.StringLengthLte),
+			fmt.Sprintf("string length equal or smaller than %d", *fv.StringLengthLte))
+	}
+
+	if fv.RuneLengthGt != nil {
+		print(fmt.Sprintf(`if ! (len([]rune(%s)) > %d){`, variableName, *fv.RuneLengthGt),
+			fmt.Sprintf("rune length greater than %d", *fv.RuneLengthGt))
+	}
+	if fv.RuneLengthGte != nil {
+		print(fmt.Sprintf(`if ! (len([]rune(%s)) >= %d){`, variableName, *fv.RuneLengthGte),
+			fmt.Sprintf("rune length equal or greater than %d", *fv.RuneLengthGte))
+	}
+
+	if fv.RuneLengthLt != nil {
+		print(fmt.Sprintf(`if ! (len([]rune(%s)) < %d){`, variableName, *fv.RuneLengthLt),
+			fmt.Sprintf("rune length smaller than %d", *fv.RuneLengthLt))
+	}
+
+	if fv.RuneLengthLte != nil {
+		print(fmt.Sprintf(`if ! (len([]rune(%s)) <= %d){`, variableName, *fv.RuneLengthLte),
+			fmt.Sprintf("rune length equal or smaller than %d", *fv.RuneLengthLte))
+	}
+
 }
 
 func (p *plugin) generateRepeatedCountValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
