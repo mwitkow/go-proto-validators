@@ -66,4 +66,12 @@ message ValidatorMessage {
 
 	// Repeated element count constraint tests.
 	repeated int32 Repeated = 35 [(validator.field) = {repeated_count_min: 2, repeated_count_max: 5}];
+
+	optional string SomeStringLtReq = 36 [(validator.field) = {length_gt: 2}];
+	optional string SomeStringGtReq = 37 [(validator.field) = {length_lt: 12}];
+    optional string SomeStringEqReq = 38 [(validator.field) = {length_eq: 10}];
+	optional bytes SomeBytesLtReq = 39 [(validator.field) = {length_gt: 5}];
+	optional bytes SomeBytesGtReq = 40 [(validator.field) = {length_lt: 20}];
+	optional bytes SomeBytesEqReq = 41 [(validator.field) = {length_eq: 12}];
+
 }
