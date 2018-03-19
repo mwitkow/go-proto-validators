@@ -62,5 +62,11 @@ message FieldValidator {
   optional int64 length_lt = 15;
   // Field value of integer strictly equal this value.
   optional int64 length_eq = 16;
+  // Field value of rune length greater than this value.
+  optional int64 rune_length_gt = 17;
+  // Field value of rune length smaller than this value.
+  optional int64 rune_length_lt = 18;
+  // Field value of integer equal this value.
+  optional int64 rune_length_eq = 19;
 
 }
