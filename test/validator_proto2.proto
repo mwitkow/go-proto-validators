@@ -5,7 +5,7 @@ syntax = "proto2";
 package validatortest;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-import "github.com/mwitkow/go-proto-validators/validator.proto";
+import "github.com/superchoice/go-proto-validators/validator.proto";
 
 message ValidatorMessage {
 	// Embedded message test structure.
@@ -69,9 +69,12 @@ message ValidatorMessage {
 
 	optional string SomeStringLtReq = 36 [(validator.field) = {length_gt: 2}];
 	optional string SomeStringGtReq = 37 [(validator.field) = {length_lt: 12}];
-    optional string SomeStringEqReq = 38 [(validator.field) = {length_eq: 10}];
+  optional string SomeStringEqReq = 38 [(validator.field) = {length_eq: 10}];
 	optional bytes SomeBytesLtReq = 39 [(validator.field) = {length_gt: 5}];
 	optional bytes SomeBytesGtReq = 40 [(validator.field) = {length_lt: 20}];
 	optional bytes SomeBytesEqReq = 41 [(validator.field) = {length_eq: 12}];
+  optional string SomeRuneStringLtReq = 42 [(validator.field) = {rune_length_gt: 2}];
+  optional string SomeRuneStringGtReq = 43 [(validator.field) = {rune_length_lt: 12}];
+  optional string SomeRuneStringEqReq = 44 [(validator.field) = {rune_length_eq: 10}];
 
 }
