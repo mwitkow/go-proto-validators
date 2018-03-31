@@ -3,7 +3,7 @@
 [![Travis Build](https://travis-ci.org/mwitkow/go-proto-validators.svg)](https://travis-ci.org/mwitkow/go-proto-validators)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-A `protoc` plugin that generates `Validate() error` functions on Go proto `struct`s based on annotations inside `.proto` 
+A `protoc` plugin that generates `Validate() error` functions on Go proto `struct`s based on field options inside `.proto` 
 files. The validation functions are code-generated and thus don't suffer on performance from tag-based reflection on
 deeply-nested messages.
 
@@ -95,7 +95,7 @@ protoc  \
 	*.proto
 ```
 
-That's fine, until you encounter `.proto` includes. Because `go-proto-validators` uses annotations inside the `.proto` 
+That's fine, until you encounter `.proto` includes. Because `go-proto-validators` uses field options inside the `.proto` 
 files themselves, it's `.proto` definition (and the Google `descriptor.proto` itself) need to on the `protoc` include
 path. Hence the above becomes:
 
