@@ -18,6 +18,7 @@ message ValidatorMessage3 {
 	string SomeString = 1 [(validator.field) = {regex: "^.{2,5}$"}];
 	repeated string SomeStringRep = 2 [(validator.field) = {regex: "^.{2,5}$"}];
 	string SomeStringNoQuotes = 3 [(validator.field) = {regex: "^[^\"]{2,5}$"}];
+	string SomeStringUnescaped = 4 [(validator.field) = {regex: "[\\p{L}\\p{N}]({\\p{L}\\p{N}_- ]{0,28}[\\p{L}\\p{N}])?."}];
 
 	// Strict integer inequality constraint tests.
 	uint32 SomeInt = 6 [(validator.field) = {int_gt: 10}];

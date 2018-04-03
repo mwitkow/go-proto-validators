@@ -148,7 +148,7 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 		validator := getFieldValidatorIfAny(field)
 		if validator != nil && validator.Regex != nil {
 			fieldName := p.GetFieldName(message, field)
-			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, strconv.Quote(*validator.Regex), `)`)
+			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", *validator.Regex, "`", `)`)
 		}
 	}
 }
@@ -204,7 +204,7 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if p.isSupportedFloat(field) {
 			p.generateFloatValidator(variableName, ccTypeName, fieldName, fieldValidator)
-		} else if (field.IsBytes()) {
+		} else if field.IsBytes() {
 			p.generateLengthValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if field.IsMessage() {
 			if repeated && nullable {
@@ -282,7 +282,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if p.isSupportedFloat(field) {
 			p.generateFloatValidator(variableName, ccTypeName, fieldName, fieldValidator)
-		} else if (field.IsBytes()) {
+		} else if field.IsBytes() {
 			p.generateLengthValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if field.IsMessage() {
 			if p.validatorWithMessageExists(fieldValidator) {

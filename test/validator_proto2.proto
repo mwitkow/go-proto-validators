@@ -19,6 +19,7 @@ message ValidatorMessage {
 	required string StringReqNonNull = 2 [(validator.field) = {regex: "^.{2,5}$"}, (gogoproto.nullable) = false];
 	optional string StringOpt = 3 [(validator.field) = {regex: "^.{2,5}$"}];
 	optional string StringOptNonNull = 4 [(validator.field) = {regex: "^.{2,5}$"}, (gogoproto.nullable) = false];
+	required string StringUnescaped = 5 [(validator.field) = {regex: "[\\p{L}\\p{N}]({\\p{L}\\p{N}_- ]{0,28}[\\p{L}\\p{N}])?."}];
 
 	// Strict integer inequality constraint tests.
 	required uint32 IntReq = 6 [(validator.field) = {int_gt: 10}];
