@@ -57,10 +57,10 @@ import (
 
 	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/proto"
-	descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
+	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/vanity"
-	"github.com/mwitkow/go-proto-validators"
+	"github.com/simplesurance/go-proto-validators"
 )
 
 type plugin struct {
@@ -71,6 +71,22 @@ type plugin struct {
 	protoPkg      generator.Single
 	validatorPkg  generator.Single
 	useGogoImport bool
+}
+
+var uuidPattern = "^[a-fA-F0-9]{8}-" +
+	"[a-fA-F0-9]{4}-" +
+	"[%s]" +
+	"[a-fA-F0-9]{3}-" +
+	"[8|9|aA|bB][a-fA-F0-9]{3}-" +
+	"[a-fA-F0-9]{12}$"
+
+var uuidMap = map[int32]string{
+	0: fmt.Sprintf(uuidPattern, "1-5"),
+	1: fmt.Sprintf(uuidPattern, "1"),
+	2: fmt.Sprintf(uuidPattern, "2"),
+	3: fmt.Sprintf(uuidPattern, "3"),
+	4: fmt.Sprintf(uuidPattern, "4"),
+	5: fmt.Sprintf(uuidPattern, "5"),
 }
 
 func NewPlugin(useGogoImport bool) generator.Plugin {
@@ -92,7 +108,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
-	p.validatorPkg = p.NewImport("github.com/mwitkow/go-proto-validators")
+	p.validatorPkg = p.NewImport("github.com/simplesurance/go-proto-validators")
 
 	for _, msg := range file.Messages() {
 		if msg.DescriptorProto.GetOptions().GetMapEntry() {
@@ -146,7 +162,10 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	for _, field := range message.Field {
 		validator := getFieldValidatorIfAny(field)
-		if validator != nil && validator.Regex != nil {
+		if validator != nil && (validator.Regex != nil || validator.Uuid != nil) {
+			if uuid, ok := uuidMap[validator.GetUuid()]; ok {
+				validator.Regex = &uuid
+			}
 			fieldName := p.GetFieldName(message, field)
 			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", *validator.Regex, "`", `)`)
 		}
@@ -461,7 +480,10 @@ func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, 
 }
 
 func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	if fv.Regex != nil {
+	if fv.Regex != nil || fv.GetUuid() != 0 {
+		if uuid, ok := uuidMap[fv.GetUuid()]; ok {
+			fv.Regex = &uuid
+		}
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 		p.In()
 		errorStr := "be a string conforming to regex " + strconv.Quote(fv.GetRegex())
