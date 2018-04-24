@@ -147,10 +147,21 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 	for _, field := range message.Field {
 		validator := getFieldValidatorIfAny(field)
 		if validator != nil && (validator.Regex != nil || validator.Uuid != nil) {
-			if uuid, err := getUUIDRegex(validator.Uuid); err == nil {
-				validator.Regex = &uuid
-			}
 			fieldName := p.GetFieldName(message, field)
+			if validator.Uuid != nil {
+				if uuid, err := getUUIDRegex(validator.GetUuid()); err != nil {
+					fmt.Fprintf(
+						os.Stderr,
+						"WARNING: field %v.%v error %s.\n",
+						ccTypeName,
+						fieldName,
+						err,
+					)
+					continue
+				} else {
+					validator.Regex = &uuid
+				}
+			}
 			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", *validator.Regex, "`", `)`)
 		}
 	}
@@ -465,8 +476,10 @@ func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, 
 
 func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if fv.Regex != nil || fv.GetUuid() != 0 {
-		if uuid, err := getUUIDRegex(fv.Uuid); err == nil {
-			fv.Regex = &uuid
+		if fv.Uuid != nil {
+			if uuid, err := getUUIDRegex(fv.GetUuid()); err == nil {
+				fv.Regex = &uuid
+			}
 		}
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 		p.In()

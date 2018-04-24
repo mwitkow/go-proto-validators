@@ -2,7 +2,6 @@ package plugin
 
 import (
 	"fmt"
-	"errors"
 	"strconv"
 )
 
@@ -13,17 +12,14 @@ var uuidPattern = "^[a-fA-F0-9]{8}-" +
 	"[8|9|aA|bB][a-fA-F0-9]{3}-" +
 	"[a-fA-F0-9]{12}$"
 
-func getUUIDRegex(version *int32) (string, error) {
-	if version == nil {
-		return "", errors.New("UUID is nil")
+func getUUIDRegex(version int32) (string, error) {
+	if version < 0 || version > 5 {
+		return "", fmt.Errorf("UUID version should be between 0-5, Got %d", version)
 	}
-	if *version < 0 || *version > 5 {
-		return "", errors.New("UUID version should be between 0-5")
-	}
-	switch *version {
+	switch version {
 	case 0:
 		return fmt.Sprintf(uuidPattern, "1-5"), nil
 	default:
-		return fmt.Sprintf(uuidPattern, strconv.FormatInt(int64(*version), 10)), nil
+		return fmt.Sprintf(uuidPattern, strconv.FormatInt(int64(version), 10)), nil
 	}
 }
