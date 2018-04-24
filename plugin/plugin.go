@@ -73,22 +73,6 @@ type plugin struct {
 	useGogoImport bool
 }
 
-var uuidPattern = "^[a-fA-F0-9]{8}-" +
-	"[a-fA-F0-9]{4}-" +
-	"[%s]" +
-	"[a-fA-F0-9]{3}-" +
-	"[8|9|aA|bB][a-fA-F0-9]{3}-" +
-	"[a-fA-F0-9]{12}$"
-
-var uuidMap = map[int32]string{
-	0: fmt.Sprintf(uuidPattern, "1-5"),
-	1: fmt.Sprintf(uuidPattern, "1"),
-	2: fmt.Sprintf(uuidPattern, "2"),
-	3: fmt.Sprintf(uuidPattern, "3"),
-	4: fmt.Sprintf(uuidPattern, "4"),
-	5: fmt.Sprintf(uuidPattern, "5"),
-}
-
 func NewPlugin(useGogoImport bool) generator.Plugin {
 	return &plugin{useGogoImport: useGogoImport}
 }
@@ -163,7 +147,7 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 	for _, field := range message.Field {
 		validator := getFieldValidatorIfAny(field)
 		if validator != nil && (validator.Regex != nil || validator.Uuid != nil) {
-			if uuid, ok := uuidMap[validator.GetUuid()]; ok {
+			if uuid, err := getUUIDRegex(validator.Uuid); err == nil {
 				validator.Regex = &uuid
 			}
 			fieldName := p.GetFieldName(message, field)
@@ -481,7 +465,7 @@ func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, 
 
 func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if fv.Regex != nil || fv.GetUuid() != 0 {
-		if uuid, ok := uuidMap[fv.GetUuid()]; ok {
+		if uuid, err := getUUIDRegex(fv.Uuid); err == nil {
 			fv.Regex = &uuid
 		}
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)

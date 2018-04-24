@@ -35,13 +35,13 @@ func (this *InnerMessage) Validate() error {
 	return nil
 }
 
-var _regex_OuterMessage_ImportantString = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`)
+var _regex_OuterMessage_ImportantString = regexp.MustCompile(`^[a-z]{2,5}$`)
 var _regex_OuterMessage_UserId = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[4][a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`)
-var _regex_OuterMessage_UserIdd = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`)
+var _regex_OuterMessage_UserIdX = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`)
 
 func (this *OuterMessage) Validate() error {
 	if !_regex_OuterMessage_ImportantString.MatchString(this.ImportantString) {
-		return go_proto_validators.FieldError("ImportantString", fmt.Errorf(`value '%v' must be a string conforming to regex "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$"`, this.ImportantString))
+		return go_proto_validators.FieldError("ImportantString", fmt.Errorf(`value '%v' must be a string conforming to regex "^[a-z]{2,5}$"`, this.ImportantString))
 	}
 	if nil == this.Inner {
 		return go_proto_validators.FieldError("Inner", fmt.Errorf("message must exist"))
@@ -54,8 +54,8 @@ func (this *OuterMessage) Validate() error {
 	if !_regex_OuterMessage_UserId.MatchString(this.UserId) {
 		return go_proto_validators.FieldError("UserId", fmt.Errorf(`value '%v' must be a string conforming to regex "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[4][a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$"`, this.UserId))
 	}
-	if !_regex_OuterMessage_UserIdd.MatchString(this.UserIdd) {
-		return go_proto_validators.FieldError("UserIdd", fmt.Errorf(`value '%v' must be a string conforming to regex "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$"`, this.UserIdd))
+	if !_regex_OuterMessage_UserIdX.MatchString(this.UserIdX) {
+		return go_proto_validators.FieldError("UserIdX", fmt.Errorf(`value '%v' must be a string conforming to regex "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$"`, this.UserIdX))
 	}
 	return nil
 }
