@@ -57,10 +57,10 @@ import (
 
 	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/proto"
-	descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
+	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/vanity"
-	"github.com/mwitkow/go-proto-validators"
+	"github.com/simplesurance/go-proto-validators"
 )
 
 type plugin struct {
@@ -92,7 +92,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
-	p.validatorPkg = p.NewImport("github.com/mwitkow/go-proto-validators")
+	p.validatorPkg = p.NewImport("github.com/simplesurance/go-proto-validators")
 
 	for _, msg := range file.Messages() {
 		if msg.DescriptorProto.GetOptions().GetMapEntry() {
@@ -146,8 +146,22 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	for _, field := range message.Field {
 		validator := getFieldValidatorIfAny(field)
-		if validator != nil && validator.Regex != nil {
+		if validator != nil && (validator.Regex != nil || validator.Uuid != nil) {
 			fieldName := p.GetFieldName(message, field)
+			if validator.Uuid != nil {
+				if uuid, err := getUUIDRegex(validator.GetUuid()); err != nil {
+					fmt.Fprintf(
+						os.Stderr,
+						"WARNING: field %v.%v error %s.\n",
+						ccTypeName,
+						fieldName,
+						err,
+					)
+					continue
+				} else {
+					validator.Regex = &uuid
+				}
+			}
 			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", *validator.Regex, "`", `)`)
 		}
 	}
@@ -461,7 +475,12 @@ func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, 
 }
 
 func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	if fv.Regex != nil {
+	if fv.Regex != nil || fv.GetUuid() != 0 {
+		if fv.Uuid != nil {
+			if uuid, err := getUUIDRegex(fv.GetUuid()); err == nil {
+				fv.Regex = &uuid
+			}
+		}
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 		p.In()
 		errorStr := "be a string conforming to regex " + strconv.Quote(fv.GetRegex())
