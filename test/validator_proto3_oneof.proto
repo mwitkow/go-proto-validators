@@ -24,5 +24,6 @@ message OneOfMessage3 {
   oneof something {
     uint32 three_int = 5 [(validator.field) = {int_gt: 20}];
     uint32 four_int = 6 [(validator.field) = {int_gt: 100}];
+    string five_regex = 7 [(validator.field) = {regex: "^[a-z]{2,5}$"}];
   }
 }

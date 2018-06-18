@@ -147,7 +147,7 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 	for _, field := range message.Field {
 		validator := getFieldValidatorIfAny(field)
 		if validator != nil && validator.Regex != nil {
-			fieldName := p.GetFieldName(message, field)
+			fieldName := p.GetOneOfFieldName(message, field)
 			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", *validator.Regex, "`", `)`)
 		}
 	}
