@@ -434,6 +434,15 @@ func TestMapAlwaysPassesUntilFixedProperly(t *testing.T) {
 	}
 }
 
+func TestOneOf_Required(t *testing.T) {
+	example := &OneOfMessage3{
+		SomeInt: 30,
+	}
+	err := example.Validate()
+	assert.Error(t, err, "oneof.required should fail if none of the oneof fields are set")
+	assert.Contains(t, err.Error(), "Something", "error must err on the Something field")
+}
+
 func TestOneOf_NestedMessage(t *testing.T) {
 	example := &OneOfMessage3{
 		SomeInt: 30,

@@ -19,6 +19,10 @@ extend google.protobuf.FieldOptions {
   optional FieldValidator field = 65020;
 }
 
+extend google.protobuf.OneofOptions {
+  optional OneofValidator oneof = 65021;
+}
+
 message FieldValidator {
   // Uses a Golang RE2-syntax regex to match the field contents.
   optional string regex = 1;
@@ -63,4 +67,9 @@ message FieldValidator {
   // Field value of integer strictly equal this value.
   optional int64 length_eq = 16;
 
+}
+
+message OneofValidator {
+  // Require that one of the oneof fields is set.
+  optional bool required = 1;
 }

@@ -4,7 +4,7 @@
 #
 # This script installs protobuf compiler `protoc` into PATH.
 
-version=${PROTOBUF_VERSION:-"3.0.0-beta-2"}
+version=${PROTOBUF_VERSION:-"3.5.1"}
 dst_dir="${HOME}/soft/protobuf"
 
 # Fail on issues.
@@ -19,4 +19,4 @@ wget https://github.com/google/protobuf/releases/download/v${version}/protoc-${v
 cd ${dst_dir}
 unzip -o dist.zip
 
-echo "Proto in \$PROTOBUF_DIR=${PROTOBUF_DIR}"
+echo "Proto in \$PROTOBUF_DIR=${dst_dir}/bin"

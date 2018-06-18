@@ -118,6 +118,16 @@ func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.F
 	return nil
 }
 
+func getOneofValidatorIfAny(oneof *descriptor.OneofDescriptorProto) *validator.OneofValidator {
+	if oneof.Options != nil {
+		v, err := proto.GetExtension(oneof.Options, validator.E_Oneof)
+		if err == nil && v.(*validator.OneofValidator) != nil {
+			return (v.(*validator.OneofValidator))
+		}
+	}
+	return nil
+}
+
 func (p *plugin) isSupportedInt(field *descriptor.FieldDescriptorProto) bool {
 	switch *(field.Type) {
 	case descriptor.FieldDescriptorProto_TYPE_INT32, descriptor.FieldDescriptorProto_TYPE_INT64:
@@ -238,6 +248,21 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
 	p.In()
+
+	for _, oneof := range message.OneofDecl {
+		oneofValidator := getOneofValidatorIfAny(oneof)
+		if oneofValidator == nil {
+			continue
+		}
+		if oneofValidator.GetRequired() {
+			oneOfName := generator.CamelCase(oneof.GetName())
+			p.P(`if this.Get` + oneOfName + `() == nil {`)
+			p.In()
+			p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, oneOfName, `",`, p.fmtPkg.Use(), `.Errorf("one of the fields must be set"))`)
+			p.Out()
+			p.P(`}`)
+		}
+	}
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
 		if fieldValidator == nil && !field.IsMessage() {

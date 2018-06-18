@@ -7,7 +7,7 @@ go:
 
 before_install:
   - ./install_protoc.sh
-  - export PATH=$PATH:$HOME/soft/protobuf
+  - export PATH=$PATH:$HOME/soft/protobuf/bin
 
 install:
   - go get github.com/stretchr/testify
