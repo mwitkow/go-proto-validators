@@ -486,3 +486,24 @@ func TestOneOf_Passes(t *testing.T) {
 	err := example.Validate()
 	assert.NoError(t, err, "This message should pass all validation")
 }
+
+func TestOneOf_Regex(t *testing.T) {
+	example := &OneOfMessage3{
+		SomeInt: 30,
+		Something: &OneOfMessage3_FiveRegex{
+			FiveRegex: "11", // fail
+		},
+	}
+	err := example.Validate()
+	assert.Error(t, err, "regex applied to oneof field should fail validation on FiveRegex")
+	assert.Contains(t, err.Error(), "FiveRegex", "error must err on the FiveRegex")
+
+	example = &OneOfMessage3{
+		SomeInt: 30,
+		Something: &OneOfMessage3_FiveRegex{
+			FiveRegex: "aaa", // pass
+		},
+	}
+	err = example.Validate()
+	assert.NoError(t, err, "This message should pass all validation")
+}
