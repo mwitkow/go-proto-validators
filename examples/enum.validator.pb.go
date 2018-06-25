@@ -27,7 +27,7 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 func (this *SomeMsg) Validate() error {
-	if name, ok := Action_name[this.Do]; !ok {
+	if _, ok := Action_name[int32(this.Do)]; !ok {
 		return go_proto_validators.FieldError("Do", fmt.Errorf(`value '%v' must be a valid Action field`, this.Do))
 	}
 	return nil
