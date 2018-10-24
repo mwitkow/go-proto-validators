@@ -124,9 +124,6 @@ protoc  \
 Basically the magical incantation (apart from includes) is the `--govalidators_out`. That triggers the 
 `protoc-gen-govalidators` plugin to generate `mymessage.validator.pb.go`. That's it :)
 
-###License
+## License
 
 `go-proto-validators` is released under the Apache 2.0 license. See the [LICENSE](LICENSE) file for details.
-
-
-
