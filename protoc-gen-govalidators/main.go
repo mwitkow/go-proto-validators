@@ -6,12 +6,11 @@ package main
 import (
 	"io/ioutil"
 	"os"
-	"strconv"
 	"strings"
 
+	validator_plugin "github.com/connectim/go-proto-validators/plugin"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	validator_plugin "github.com/mwitkow/go-proto-validators/plugin"
 )
 
 func main() {
@@ -31,19 +30,20 @@ func main() {
 	}
 
 	useGogoImport := false
-	// Match parsing algorithm from Generator.CommandLineParameters
-	for _, parameter := range strings.Split(gen.Request.GetParameter(), ",") {
-		kvp := strings.SplitN(parameter, "=", 2)
-		// We only care about key-value pairs where the key is "gogoimport"
-		if len(kvp) != 2 || kvp[0] != "gogoimport" {
-			continue
+	/*
+		// Match parsing algorithm from Generator.CommandLineParameters
+		for _, parameter := range strings.Split(gen.Request.GetParameter(), ",") {
+			kvp := strings.SplitN(parameter, "=", 2)
+			// We only care about key-value pairs where the key is "gogoimport"
+			if len(kvp) != 2 || kvp[0] != "gogoimport" {
+				continue
+			}
+			useGogoImport, err = strconv.ParseBool(kvp[1])
+			if err != nil {
+				gen.Error(err, "parsing gogoimport option")
+			}
 		}
-		useGogoImport, err = strconv.ParseBool(kvp[1])
-		if err != nil {
-			gen.Error(err, "parsing gogoimport option")
-		}
-	}
-
+	*/
 	gen.CommandLineParameters(gen.Request.GetParameter())
 
 	gen.WrapTypes()
