@@ -92,7 +92,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
-	p.validatorPkg = p.NewImport("github.com/TheThingsIndustries/go-proto-validators")
+	p.validatorPkg = p.NewImport("github.com/TheThingsIndustries/go-proto-validators/util")
 
 	for _, msg := range file.Messages() {
 		if msg.DescriptorProto.GetOptions().GetMapEntry() {
@@ -236,8 +236,16 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 
 func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
-	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
+	p.P(`func (this *`, ccTypeName, `) Validate(paths []string) error {`)
 	p.In()
+	p.P(`toBeValidated, err := `, p.validatorPkg.Use(), `.GetFieldsToValidate(this, paths)`)
+	p.P(`if err != nil {`)
+	p.In()
+	p.P(`return err`)
+	p.Out()
+	p.P(`}`)
+	p.P("\n")
+
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
 		if fieldValidator == nil && !field.IsMessage() {
@@ -299,13 +307,13 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				}
 			}
 			if nullable {
-				p.P(`if `, variableName, ` != nil {`)
+				p.P(`if `, variableName, ` != nil && `, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", paths){`)
 				p.In()
 			} else {
 				// non-nullable fields in proto3 store actual structs, we need pointers to operate on interfaces
 				variableName = "&(" + variableName + ")"
 			}
-			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `); err != nil {`)
+			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `,"`, variableName, `", paths ); err != nil {`)
 			p.In()
 			p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `", err)`)
 			p.Out()
@@ -370,7 +378,7 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	}
 
 	if fv.LengthEq != nil {
-		p.P(`if !( len(`, variableName, `) == `, fv.LengthEq, `) {`)
+		p.P(`if !( len(`, variableName, `) == `, fv.LengthEq, ` && shouldBeValidated("`, variableName, `", toBeValidated)) {`)
 		p.In()
 		errorStr := fmt.Sprintf(`length be not equal '%d'`, fv.GetLengthEq())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
