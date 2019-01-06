@@ -8,7 +8,7 @@ init:
 
 install:
 	@echo "--- Installing govalidators to GOPATH"
-	go install github.com/TheTHingsIndustries/go-proto-validators/protoc-gen-govalidators
+	go install github.com/TheThingsIndustries/go-proto-validators/protoc-gen-govalidators
 
 regenerate_test_gogo:
 	@echo "Regenerating test .proto files with gogo imports"
