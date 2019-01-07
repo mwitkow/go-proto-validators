@@ -32,7 +32,11 @@ type TestMessage struct {
 }
 
 type BadStruct struct {
-	ID string `json:"id"`
+	ID string `json:"id,omitempty,repeatable"`
+}
+
+type CustomTagStruct struct {
+	SomeString string `json:"some_string"`
 }
 
 func (m *TestMessage) Validate(fieldMask []string) error {
@@ -86,6 +90,13 @@ func TestGetFieldsToValidate(t *testing.T) {
 			InputFieldMaskPaths: completeFieldMask,
 			ExpectedFields:      []string{},
 			ExpectedError:       errInvalidMessage,
+		},
+		{
+			Name:                "CustomStructTag",
+			InputMessage:        &CustomTagStruct{},
+			InputFieldMaskPaths: completeFieldMask,
+			ExpectedFields:      []string{"SomeString"},
+			ExpectedError:       nil,
 		},
 	} {
 		t.Run(tc.Name, func(t *testing.T) {

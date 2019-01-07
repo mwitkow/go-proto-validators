@@ -55,7 +55,6 @@ func FieldError(fieldName string, err error) error {
 
 // GetFieldsToValidate extracts the names of fields for the corresponding fieldmasks.
 // If the fieldmask is empty, all the fields are returned.
-// This works only on protobuf generated structs or structs that have JSON tags in the format "fieldname,omitempty".
 func GetFieldsToValidate(i interface{}, paths []string) ([]string, error) {
 	val := reflect.ValueOf(i).Elem()
 	if !val.IsValid() || val.Type().NumField() == 0 {
@@ -67,9 +66,8 @@ func GetFieldsToValidate(i interface{}, paths []string) ([]string, error) {
 		if jsonTag == "" || jsonTag == "-" {
 			continue
 		}
-		// Split the tag since protobuf json tags are in the format "fieldname,omitempty".
 		s := strings.Split(jsonTag, jsonTagDelimiter)
-		if len(s) != 2 {
+		if len(s) > 2 {
 			return []string{}, errInvalidMessage
 		}
 		// Add all fields to the list to be validated if no fieldmask paths are specified.
