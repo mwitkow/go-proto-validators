@@ -66,7 +66,11 @@ func GetFieldsToValidate(i interface{}, paths []string) ([]string, error) {
 
 // ShouldBeValidated checks if the given field is a part of the list of fields to be validated.
 // This list is created using "GetFieldsToValidate".
+// If no fields are provided, it returns true.
 func ShouldBeValidated(name string, fieldNames []string) bool {
+	if len(fieldNames) == 0 {
+		return true
+	}
 	// The name as passed by the generator would be in the format this.FieldName
 	s := strings.Split(name, fieldMaskDelimiter)
 	if len(s) != 2 {
@@ -79,6 +83,36 @@ func ShouldBeValidated(name string, fieldNames []string) bool {
 		}
 	}
 	return false
+}
+
+// GetTopNameForField retrieves the top field name for the field.
+// the name is passed as "this.Fieldname"
+func GetTopNameForField(name string, i interface{}) string {
+	if name == "" || i == nil {
+		return ""
+	}
+	names := strings.Split(name, ".")
+	if len(names) != 2 {
+		return ""
+	}
+	val := reflect.ValueOf(i).Elem()
+	if !val.IsValid() || val.Type().NumField() == 0 {
+		return ""
+	}
+	for i := 0; i < val.Type().NumField(); i++ {
+		if names[1] == val.Type().Field(i).Name {
+			jsonTag := val.Type().Field(i).Tag.Get("json")
+			if jsonTag == "" || jsonTag == "-" {
+				return ""
+			}
+			s := strings.Split(jsonTag, jsonTagDelimiter)
+			if len(s) > 2 {
+				return ""
+			}
+			return s[0]
+		}
+	}
+	return ""
 }
 
 // getFieldMaskForEmbeddedFields returns a new FieldMask path for fields inside an embedded message.

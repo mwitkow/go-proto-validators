@@ -227,13 +227,13 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				}
 			}
 			if nullable {
-				p.P(`if (`, variableName, ` != nil) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", paths)){`)
+				p.P(`if (`, variableName, ` != nil) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", toBeValidated)){`)
 				p.In()
 			} else {
 				// non-nullable fields in proto3 store actual structs, we need pointers to operate on interfaces
 				variableName = "&(" + variableName + ")"
 			}
-			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `,"`, variableName, `", paths ); err != nil {`)
+			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `,`, p.validatorPkg.Use(), `.GetTopNameForField("`, variableName, `", this), paths ); err != nil {`)
 			p.In()
 			p.P(`return err`)
 			p.Out()

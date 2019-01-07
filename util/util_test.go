@@ -43,7 +43,6 @@ func (m *TestMessage) Validate(fieldMask []string) error {
 	return nil
 }
 func (m *Embedded) Validate(fieldMask []string) error {
-	fmt.Println(fieldMask)
 	return nil
 }
 
@@ -141,11 +140,59 @@ func TestShouldBeValidated(t *testing.T) {
 			Name:           "NoFieldsToValidate",
 			InputField:     "this.SomeInt",
 			ValidFields:    []string{},
-			ExpectedResult: false,
+			ExpectedResult: true,
 		},
 	} {
 		t.Run(tc.Name, func(t *testing.T) {
 			res := ShouldBeValidated(tc.InputField, tc.ValidFields)
+			if tc.ExpectedResult != res {
+				t.Fatal(fmt.Sprintf("Expected %v, received %v", tc.ExpectedResult, res))
+			}
+		})
+	}
+
+}
+
+func TestGetTopNameForField(t *testing.T) {
+	for _, tc := range []struct {
+		Name           string
+		InputTopField  string
+		InputMessage   interface{}
+		ExpectedResult string
+	}{
+		{
+			Name:           "ValidInputs",
+			InputTopField:  "this.SomeInt",
+			InputMessage:   &TestMessage{},
+			ExpectedResult: "some_int",
+		},
+		{
+			Name:           "NilMessage",
+			InputTopField:  "this.SomeInt",
+			InputMessage:   nil,
+			ExpectedResult: "",
+		},
+		{
+			Name:           "MalformedTopField",
+			InputTopField:  "SomeInt",
+			InputMessage:   &TestMessage{},
+			ExpectedResult: "",
+		},
+		{
+			Name:           "CustomStruct",
+			InputTopField:  "this.SomeString",
+			InputMessage:   &CustomTagStruct{},
+			ExpectedResult: "some_string",
+		},
+		{
+			Name:           "BadStruct",
+			InputTopField:  "this.SomeInt",
+			InputMessage:   &BadStruct{},
+			ExpectedResult: "",
+		},
+	} {
+		t.Run(tc.Name, func(t *testing.T) {
+			res := GetTopNameForField(tc.InputTopField, tc.InputMessage)
 			if tc.ExpectedResult != res {
 				t.Fatal(fmt.Sprintf("Expected %v, received %v", tc.ExpectedResult, res))
 			}

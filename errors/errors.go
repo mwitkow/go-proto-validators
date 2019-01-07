@@ -42,7 +42,7 @@ func GetType(err string) string {
 	if len(s) != 3 {
 		return ""
 	}
-	return strings.Replace(s[0], "FIELD_ERROR_TYPE", "Types", 1)
+	return strings.Replace(s[0], "FIELD_ERROR_TYPE_", "", 1)
 }
 
 // FieldError wraps a given Validator error providing a message call stack.
