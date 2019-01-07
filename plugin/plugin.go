@@ -307,7 +307,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				}
 			}
 			if nullable {
-				p.P(`if `, variableName, ` != nil && `, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", paths){`)
+				p.P(`if (`, variableName, ` != nil) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", paths)){`)
 				p.In()
 			} else {
 				// non-nullable fields in proto3 store actual structs, we need pointers to operate on interfaces
@@ -341,7 +341,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 
 func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if fv.IntGt != nil {
-		p.P(`if !(`, variableName, ` > `, fv.IntGt, `) {`)
+		p.P(`if !(`, variableName, ` > `, fv.IntGt, `) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", toBeValidated)) {`)
 		p.In()
 		errorStr := fmt.Sprintf(`be greater than '%d'`, fv.GetIntGt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
@@ -349,7 +349,7 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 		p.P(`}`)
 	}
 	if fv.IntLt != nil {
-		p.P(`if !(`, variableName, ` < `, fv.IntLt, `) {`)
+		p.P(`if !(`, variableName, ` < `, fv.IntLt, `) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", toBeValidated)) {`)
 		p.In()
 		errorStr := fmt.Sprintf(`be less than '%d'`, fv.GetIntLt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
@@ -360,7 +360,7 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 
 func (p *plugin) generateLengthValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if fv.LengthGt != nil {
-		p.P(`if !( len(`, variableName, `) > `, fv.LengthGt, `) {`)
+		p.P(`if !( len(`, variableName, `) == `, fv.LengthGt, `) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", toBeValidated)) {`)
 		p.In()
 		errorStr := fmt.Sprintf(`length be greater than '%d'`, fv.GetLengthGt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
@@ -369,7 +369,7 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	}
 
 	if fv.LengthLt != nil {
-		p.P(`if !( len(`, variableName, `) < `, fv.LengthLt, `) {`)
+		p.P(`if !( len(`, variableName, `) == `, fv.LengthLt, `) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", toBeValidated)) {`)
 		p.In()
 		errorStr := fmt.Sprintf(`length be less than '%d'`, fv.GetLengthLt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
@@ -378,7 +378,7 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	}
 
 	if fv.LengthEq != nil {
-		p.P(`if !( len(`, variableName, `) == `, fv.LengthEq, ` && shouldBeValidated("`, variableName, `", toBeValidated)) {`)
+		p.P(`if !( len(`, variableName, `) == `, fv.LengthEq, `) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", toBeValidated)) {`)
 		p.In()
 		errorStr := fmt.Sprintf(`length be not equal '%d'`, fv.GetLengthEq())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
@@ -470,7 +470,7 @@ func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, 
 
 func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if fv.Regex != nil {
-		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
+		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", toBeValidated)) {`)
 		p.In()
 		errorStr := "be a string conforming to regex " + strconv.Quote(fv.GetRegex())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
@@ -478,7 +478,7 @@ func (p *plugin) generateStringValidator(variableName string, ccTypeName string,
 		p.P(`}`)
 	}
 	if fv.StringNotEmpty != nil && fv.GetStringNotEmpty() {
-		p.P(`if `, variableName, ` == "" {`)
+		p.P(`if (`, variableName, ` == "" ) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", toBeValidated)) {`)
 		p.In()
 		errorStr := "not be an empty string"
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
@@ -585,9 +585,9 @@ func (p *plugin) validatorWithNonRepeatedConstraint(fv *validator.FieldValidator
 	}
 
 	// Need to use reflection in order to be future-proof for new types of constraints.
-	v := reflect.ValueOf(*fv)
+	v := reflect.ValueOf(fv).Elem()
 	for i := 0; i < v.NumField(); i++ {
-		if v.Type().Field(i).Name != "RepeatedCountMin" && v.Type().Field(i).Name != "RepeatedCountMax" && v.Field(i).Pointer() != 0 {
+		if v.Type().Field(i).Name != "RepeatedCountMin" && v.Type().Field(i).Name != "RepeatedCountMax" {
 			return true
 		}
 	}
