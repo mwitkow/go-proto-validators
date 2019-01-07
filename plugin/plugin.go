@@ -50,6 +50,7 @@ package plugin
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"reflect"
 	"strconv"
@@ -70,9 +71,11 @@ type plugin struct {
 	fmtPkg        generator.Single
 	protoPkg      generator.Single
 	validatorPkg  generator.Single
+	errorPkg      generator.Single
 	useGogoImport bool
 }
 
+// NewPlugin ...
 func NewPlugin(useGogoImport bool) generator.Plugin {
 	return &plugin{useGogoImport: useGogoImport}
 }
@@ -93,6 +96,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
 	p.validatorPkg = p.NewImport("github.com/TheThingsIndustries/go-proto-validators/util")
+	p.errorPkg = p.NewImport("github.com/TheThingsIndustries/go-proto-validators/errors")
 
 	for _, msg := range file.Messages() {
 		if msg.DescriptorProto.GetOptions().GetMapEntry() {
@@ -102,7 +106,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 		if gogoproto.IsProto3(file.FileDescriptorProto) {
 			p.generateProto3Message(file, msg)
 		} else {
-			p.generateProto2Message(file, msg)
+			log.Fatal("Only proto3 messages are supported")
 		}
 
 	}
@@ -151,87 +155,6 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", *validator.Regex, "`", `)`)
 		}
 	}
-}
-
-func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *generator.Descriptor) {
-	ccTypeName := generator.CamelCaseSlice(message.TypeName())
-
-	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
-	p.In()
-	for _, field := range message.Field {
-		fieldName := p.GetFieldName(message, field)
-		fieldValidator := getFieldValidatorIfAny(field)
-		if fieldValidator == nil && !field.IsMessage() {
-			continue
-		}
-		if p.validatorWithMessageExists(fieldValidator) {
-			fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is a proto2 message, validator.msg_exists has no effect\n", ccTypeName, fieldName)
-		}
-		variableName := "this." + fieldName
-		repeated := field.IsRepeated()
-		nullable := gogoproto.IsNullable(field)
-		// For proto2 syntax, only Gogo generates non-pointer fields
-		nonpointer := gogoproto.ImportsGoGoProto(file.FileDescriptorProto) && !gogoproto.IsNullable(field)
-		if repeated {
-			p.generateRepeatedCountValidator(variableName, ccTypeName, fieldName, fieldValidator)
-			if field.IsMessage() || p.validatorWithNonRepeatedConstraint(fieldValidator) {
-				p.P(`for _, item := range `, variableName, `{`)
-				p.In()
-				variableName = "item"
-			}
-		} else if nullable {
-			p.P(`if `, variableName, ` != nil {`)
-			p.In()
-			if !field.IsBytes() {
-				variableName = "*(" + variableName + ")"
-			}
-		} else if nonpointer {
-			// can use the field directly
-		} else if !field.IsMessage() {
-			variableName = `this.Get` + fieldName + `()`
-		}
-		if !repeated && fieldValidator != nil {
-			if fieldValidator.RepeatedCountMin != nil {
-				fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is not repeated, validator.min_elts has no effects\n", ccTypeName, fieldName)
-			}
-			if fieldValidator.RepeatedCountMax != nil {
-				fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is not repeated, validator.max_elts has no effects\n", ccTypeName, fieldName)
-			}
-		}
-		if field.IsString() {
-			p.generateStringValidator(variableName, ccTypeName, fieldName, fieldValidator)
-		} else if p.isSupportedInt(field) {
-			p.generateIntValidator(variableName, ccTypeName, fieldName, fieldValidator)
-		} else if p.isSupportedFloat(field) {
-			p.generateFloatValidator(variableName, ccTypeName, fieldName, fieldValidator)
-		} else if field.IsBytes() {
-			p.generateLengthValidator(variableName, ccTypeName, fieldName, fieldValidator)
-		} else if field.IsMessage() {
-			if repeated && nullable {
-				variableName = "*(item)"
-			}
-			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(&(`, variableName, `)); err != nil {`)
-			p.In()
-			p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `", err)`)
-			p.Out()
-			p.P(`}`)
-		}
-		if repeated {
-			// end the repeated loop
-			if field.IsMessage() || p.validatorWithNonRepeatedConstraint(fieldValidator) {
-				// This internal 'if' cannot be refactored as it would change semantics with respect to the corresponding prelude 'if's
-				p.Out()
-				p.P(`}`)
-			}
-		} else if nullable {
-			// end the if around nullable
-			p.Out()
-			p.P(`}`)
-		}
-	}
-	p.P(`return nil`)
-	p.Out()
-	p.P(`}`)
 }
 
 func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *generator.Descriptor) {
@@ -297,7 +220,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				if nullable && !repeated {
 					p.P(`if nil == `, variableName, `{`)
 					p.In()
-					p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("message must exist"))`)
+					p.P(`return `, p.errorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("message must exist"))`)
 					p.Out()
 					p.P(`}`)
 				} else if repeated {
@@ -315,7 +238,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			}
 			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `,"`, variableName, `", paths ); err != nil {`)
 			p.In()
-			p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `", err)`)
+			p.P(`return `, p.errorPkg.Use(), `.FieldError("`, fieldName, `", err)`)
 			p.Out()
 			p.P(`}`)
 			if nullable {
@@ -515,9 +438,9 @@ func (p *plugin) generateRepeatedCountValidator(variableName string, ccTypeName 
 
 func (p *plugin) generateErrorString(variableName string, fieldName string, specificError string, fv *validator.FieldValidator) {
 	if fv.GetHumanError() == "" {
-		p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`value '%v' must ", specificError, "`", `, `, variableName, `))`)
+		p.P(`return `, p.errorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`value '%v' must ", specificError, "`", `, `, variableName, `))`)
 	} else {
-		p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", fv.GetHumanError(), "`))")
+		p.P(`return `, p.errorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", fv.GetHumanError(), "`))")
 	}
 
 }
