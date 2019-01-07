@@ -31,28 +31,6 @@ func CallValidatorIfExists(candidate interface{}, topLevelPath string, fullPaths
 	return nil
 }
 
-type fieldError struct {
-	fieldStack []string
-	nestedErr  error
-}
-
-// Error returns the error as a string
-func (f *fieldError) Error() string {
-	return "invalid field " + strings.Join(f.fieldStack, ".") + ": " + f.nestedErr.Error()
-}
-
-// FieldError wraps a given Validator error providing a message call stack.
-func FieldError(fieldName string, err error) error {
-	if fErr, ok := err.(*fieldError); ok {
-		fErr.fieldStack = append([]string{fieldName}, fErr.fieldStack...)
-		return err
-	}
-	return &fieldError{
-		fieldStack: []string{fieldName},
-		nestedErr:  err,
-	}
-}
-
 // GetFieldsToValidate extracts the names of fields for the corresponding fieldmasks.
 // If the fieldmask is empty, all the fields are returned.
 func GetFieldsToValidate(i interface{}, paths []string) ([]string, error) {

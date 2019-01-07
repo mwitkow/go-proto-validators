@@ -1,0 +1,40 @@
+syntax = "proto3";
+package errors;
+
+// Types defines the error types for the supported validation checks.
+// If validation criteria are added/removed from "validator.proto", make sure that this is updated.
+// Please keep this list sorted alphabetically.
+enum Types{
+    // Floating value Field describing the epsilon within which any comparison should be considered to be true.
+    FLOAT_ELIPSON = 0;
+    // Floating value Field must be strictly greater than the specified value.
+    FLOAT_GT = 1;
+    // Floating value Field must be greater than or equal to the specified value.
+    FLOAT_GTE = 2;
+    // Floating value Field must be strictly lesser than the specified value.
+    FLOAT_LT = 3;
+    // Floating value Field must be lesser than or equal to the specified value.
+    FLOAT_LTE = 4;
+    // Field has an accompanying user specified error.
+    HUMAN_ERROR = 5;
+    // Integer Field must be strictly greater than the specified value.
+    INT_GT = 6;
+    // Integer Field must be strictly lesser than the specified value.
+    INT_LT = 7;
+    // Field (string/byte slice) must have a length equal to the specified value.
+    LENGTH_EQ = 8;
+    // Field (string/byte slice) must have a length greater than the specified value.
+    LENGTH_GT = 9;
+    // Field (string/byte slice) must have a length lesser than the specified value.
+    LENGTH_LT = 10;
+    // Message Field must exist.
+    MSG_EXISTS = 11;
+    // Repeated Field must at the most the specified number elements.
+    REPEATED_COUNT_MAX = 12;
+    // Repeated Field must at least the specified number elements.
+    REPEATED_COUNT_MIN = 13;
+    // String Field must not be empty.
+    STRING_NOT_EMPTY = 14;
+    // String Field must pass the regex check.
+    STRING_REGEX = 15;
+}

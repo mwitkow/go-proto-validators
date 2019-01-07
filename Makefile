@@ -10,6 +10,15 @@ install:
 	@echo "--- Installing govalidators to GOPATH"
 	go install github.com/TheThingsIndustries/go-proto-validators/protoc-gen-govalidators
 
+
+regenerate_test_generic:
+	@echo "Regenerating the generic test .proto files (with gogo)"
+	(protoc  \
+	--proto_path=${GOPATH}/src \
+ 	--proto_path=test \
+	--gogo_out=test \
+	--govalidators_out=gogoimport=true:test test/generic/*.proto)
+
 regenerate_test_gogo:
 	@echo "Regenerating test .proto files with gogo imports"
 	(protoc  \
@@ -33,6 +42,13 @@ regenerate_example: install
 	--proto_path=. \
 	--go_out=. \
 	--govalidators_out=. examples/*.proto)
+
+errors: install
+	@echo "--- Regenerating error definitions"
+	(protoc  \
+	--proto_path=${GOPATH}/src \
+	--proto_path=errors \
+	--go_out=errors errors/*.proto)
 
 test: install regenerate_test_gogo regenerate_test_golang
 	@echo "Running tests"
