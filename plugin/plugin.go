@@ -230,7 +230,10 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				p.P(`if (`, variableName, ` != nil) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", toBeValidated)){`)
 				p.In()
 			} else {
-				// non-nullable fields in proto3 store actual structs, we need pointers to operate on interfaces
+				// Non-nullable fields are created using [(gogoproto.nullable) = false].
+				// These fields in proto3 store actual structs, we need pointers to operate on interfaces.
+				// For these messages, the fieldmask will be ignored since they must exist.
+				// So the validator of the message will be called regardless of the fieldmask.
 				variableName = "&(" + variableName + ")"
 			}
 			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `,`, p.validatorPkg.Use(), `.GetTopNameForField("`, variableName, `", this), paths ); err != nil {`)
@@ -280,7 +283,7 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 
 func (p *plugin) generateLengthValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if fv.LengthGt != nil {
-		p.P(`if !( len(`, variableName, `) == `, fv.LengthGt, `) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", toBeValidated)) {`)
+		p.P(`if !( len(`, variableName, `) > `, fv.LengthGt, `) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", toBeValidated)) {`)
 		p.In()
 		errorStr := fmt.Sprintf(` be longer than '%d' elements`, fv.GetLengthGt())
 		p.generateErrorString(variableName, errors.Types_LENGTH_GT, fieldName, errorStr, fv)
@@ -289,7 +292,7 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	}
 
 	if fv.LengthLt != nil {
-		p.P(`if !( len(`, variableName, `) == `, fv.LengthLt, `) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", toBeValidated)) {`)
+		p.P(`if !( len(`, variableName, `) < `, fv.LengthLt, `) && (`, p.validatorPkg.Use(), `.ShouldBeValidated("`, variableName, `", toBeValidated)) {`)
 		p.In()
 		errorStr := fmt.Sprintf(` be shorter than '%d' elements`, fv.GetLengthLt())
 		p.generateErrorString(variableName, errors.Types_LENGTH_LT, fieldName, errorStr, fv)

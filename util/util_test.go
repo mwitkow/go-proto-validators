@@ -269,9 +269,11 @@ func TestCallIfValidatorExists(t *testing.T) {
 			FullPaths:    completeEmbeddedFieldMask,
 		},
 	} {
-		err := CallValidatorIfExists(tc.Message, tc.TopLevelPath, tc.FullPaths)
-		if err != nil {
-			t.Fatal("Validator not called")
-		}
+		t.Run(tc.Name, func(t *testing.T) {
+			err := CallValidatorIfExists(tc.Message, tc.TopLevelPath, tc.FullPaths)
+			if err != nil {
+				t.Fatal("Validator not called")
+			}
+		})
 	}
 }
