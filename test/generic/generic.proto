@@ -27,6 +27,14 @@ message GenericTestMessage {
 	int64 some_int = 3 [(validator.field) = {int_gt: 500}];
 	Embedded embedded_mandatory = 4 [(validator.field) = {msg_exists: true}];
 	Embedded embedded_not_mandatory = 5;
-	google.protobuf.FieldMask field_mask = 6 [(gogoproto.nullable) = false];
+	google.protobuf.FieldMask field_mask = 7 [(gogoproto.nullable) = false];
+}
+
+// GenericTestMessageWithRepeated is a test message with embedded fields.
+message GenericTestMessageWithRepeated{
+	string some_string = 1 [(validator.field) = {regex: "^.{2,5}$"}];
+	bytes some_bytes = 2 [(validator.field) = {length_lt: 5}];
+	repeated Embedded embedded_repeated = 3;
+	repeated Embedded embedded_repeated_with_check = 4 [(validator.field) = {repeated_count_max: 10, repeated_count_min: 1}];
 }
 

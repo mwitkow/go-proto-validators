@@ -194,7 +194,6 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			if field.IsMessage() || p.validatorWithNonRepeatedConstraint(fieldValidator) {
 				p.P(`for _, item := range `, variableName, `{`)
 				p.In()
-				variableName = "item"
 			}
 		} else if fieldValidator != nil {
 			if fieldValidator.RepeatedCountMin != nil {
@@ -236,7 +235,13 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				// So the validator of the message will be called regardless of the fieldmask.
 				variableName = "&(" + variableName + ")"
 			}
-			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `,`, p.validatorPkg.Use(), `.GetTopNameForField("`, variableName, `", this), paths ); err != nil {`)
+
+			if repeated {
+				p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(item,`, p.validatorPkg.Use(), `.GetTopNameForField("`, variableName, `", this), paths ); err != nil {`)
+			} else {
+				p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `,`, p.validatorPkg.Use(), `.GetTopNameForField("`, variableName, `", this), paths ); err != nil {`)
+			}
+
 			p.In()
 			p.P(`return err`)
 			p.Out()
