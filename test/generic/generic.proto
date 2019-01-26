@@ -8,14 +8,12 @@ import "github.com/TheThingsIndustries/go-proto-validators/validator.proto";
 // InnerEmbedded is the innermost embedded structure.
 message InnerEmbedded{
 	string id = 1 [(validator.field) = {string_not_empty: true}];
-	int64 some_int = 2 [(validator.field) = {int_gt: 0, int_lt: 100}];
 	google.protobuf.FieldMask field_mask = 6 [(gogoproto.nullable) = false];
 }
 
 // Embedded is the intermediate embedded structure.
 message Embedded {
 	string identifier = 1 [(validator.field) = {regex: "^[a-z]{2,10}$"}];
-	int64 some_int = 2 [(validator.field) = {int_gt: 0, int_lt: 100}];
 	InnerEmbedded inner = 3;
 	google.protobuf.FieldMask field_mask = 4 [(gogoproto.nullable) = false];
 }
@@ -23,8 +21,6 @@ message Embedded {
 // GenericTestMessage is the top level message that embeds other messages.
 message GenericTestMessage {
 	string some_string = 1 [(validator.field) = {regex: "^.{2,5}$"}];
-	bytes some_bytes = 2 [(validator.field) = {length_lt: 5}];
-	int64 some_int = 3 [(validator.field) = {int_gt: 500}];
 	Embedded embedded_mandatory = 4 [(validator.field) = {msg_exists: true}];
 	Embedded embedded_not_mandatory = 5;
 	google.protobuf.FieldMask field_mask = 7 [(gogoproto.nullable) = false];
@@ -33,7 +29,6 @@ message GenericTestMessage {
 // GenericTestMessageWithRepeated is a test message with embedded fields.
 message GenericTestMessageWithRepeated{
 	string some_string = 1 [(validator.field) = {regex: "^.{2,5}$"}];
-	bytes some_bytes = 2 [(validator.field) = {length_lt: 5}];
 	repeated Embedded embedded_repeated = 3;
 	repeated Embedded embedded_repeated_with_check = 4 [(validator.field) = {repeated_count_max: 10, repeated_count_min: 1}];
 }

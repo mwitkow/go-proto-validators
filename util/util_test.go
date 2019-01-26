@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-var allFields = []string{"SomeString", "SomeInt", "SomeDouble", "SomeRepeated", "SomeEmbedded"}
+var allFields = map[string]string{"some_string": "SomeString", "some_int": "SomeInt", "some_double": "SomeDouble", "some_repeated": "SomeRepeated", "some_embedded": "SomeEmbedded"}
 var completeFieldMask = []string{"some_string", "some_int", "some_double", "some_repeated", "some_embedded"}
 var completeEmbeddedFieldMask = []string{"some_string", "some_int", "some_double", "some_repeated", "some_embedded.ids", "some_embedded.ids.version", "some_embedded.ids.version.timestamp", "some_embedded.value", "some_embedded.name"}
 var embeddedFields = []string{"ids", "ids.version", "ids.version.timestamp", "value", "name"}
@@ -52,28 +52,28 @@ func TestGetFieldsToValidate(t *testing.T) {
 		Name                string
 		InputMessage        interface{}
 		InputFieldMaskPaths []string
-		ExpectedFields      []string
+		ExpectedFields      map[string]string
 		ExpectedError       interface{}
 	}{
 		{
 			Name:                "NilFieldMask",
 			InputMessage:        &TestMessage{},
 			InputFieldMaskPaths: nil,
-			ExpectedFields:      allFields,
+			ExpectedFields:      map[string]string{},
 			ExpectedError:       nil,
 		},
 		{
 			Name:                "OneField",
 			InputMessage:        &TestMessage{},
 			InputFieldMaskPaths: []string{"some_int"},
-			ExpectedFields:      []string{"SomeInt"},
+			ExpectedFields:      map[string]string{"some_int": "SomeInt"},
 			ExpectedError:       nil,
 		},
 		{
 			Name:                "InvalidFieldMask",
 			InputMessage:        &TestMessage{},
 			InputFieldMaskPaths: []string{"somesome_int"},
-			ExpectedFields:      []string{},
+			ExpectedFields:      map[string]string{},
 			ExpectedError:       nil,
 		},
 		{
@@ -87,14 +87,14 @@ func TestGetFieldsToValidate(t *testing.T) {
 			Name:                "InvalidStructTag",
 			InputMessage:        &BadStruct{},
 			InputFieldMaskPaths: completeFieldMask,
-			ExpectedFields:      []string{},
+			ExpectedFields:      map[string]string{},
 			ExpectedError:       errInvalidMessage,
 		},
 		{
 			Name:                "CustomStructTag",
 			InputMessage:        &CustomTagStruct{},
 			InputFieldMaskPaths: completeFieldMask,
-			ExpectedFields:      []string{"SomeString"},
+			ExpectedFields:      map[string]string{"some_string": "SomeString"},
 			ExpectedError:       nil,
 		},
 	} {
@@ -115,32 +115,32 @@ func TestShouldBeValidated(t *testing.T) {
 	for _, tc := range []struct {
 		Name           string
 		InputField     string
-		ValidFields    []string
+		ValidFields    map[string]string
 		ExpectedResult bool
 	}{
 		{
 			Name:           "ShouldBeValidated",
-			InputField:     "this.SomeInt",
+			InputField:     "SomeInt",
 			ValidFields:    allFields,
 			ExpectedResult: true,
 		},
 		{
-			Name:           "ShouldNotValidated",
-			InputField:     "this.SomeInt",
-			ValidFields:    []string{"SomeString", "SomeDouble", "SomeRepeated", "SomeEmbedded"},
+			Name:           "ShouldNotBeValidated",
+			InputField:     "SomeInt",
+			ValidFields:    map[string]string{"some_string": "SomeString", "some_double": "SomeDouble", "some_repeated": "SomeRepeated", "some_embedded": "SomeEmbedded"},
 			ExpectedResult: false,
 		},
 		{
 			Name:           "MalFormedInput",
-			InputField:     "SomeInt",
-			ValidFields:    []string{"SomeString", "SomeDouble", "SomeRepeated", "SomeEmbedded"},
-			ExpectedResult: true,
+			InputField:     "this.SomeInt",
+			ValidFields:    map[string]string{"some_string": "SomeString", "some_double": "SomeDouble", "some_repeated": "SomeRepeated", "some_embedded": "SomeEmbedded"},
+			ExpectedResult: false,
 		},
 		{
 			Name:           "NoFieldsToValidate",
-			InputField:     "this.SomeInt",
-			ValidFields:    []string{},
-			ExpectedResult: true,
+			InputField:     "SomeInt",
+			ValidFields:    map[string]string{},
+			ExpectedResult: false,
 		},
 	} {
 		t.Run(tc.Name, func(t *testing.T) {
@@ -150,7 +150,6 @@ func TestShouldBeValidated(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestGetTopNameForField(t *testing.T) {
@@ -162,31 +161,31 @@ func TestGetTopNameForField(t *testing.T) {
 	}{
 		{
 			Name:           "ValidInputs",
-			InputTopField:  "this.SomeInt",
+			InputTopField:  "SomeInt",
 			InputMessage:   &TestMessage{},
 			ExpectedResult: "some_int",
 		},
 		{
 			Name:           "NilMessage",
-			InputTopField:  "this.SomeInt",
+			InputTopField:  "SomeInt",
 			InputMessage:   nil,
 			ExpectedResult: "",
 		},
 		{
 			Name:           "MalformedTopField",
-			InputTopField:  "SomeInt",
+			InputTopField:  "this.SomeInt",
 			InputMessage:   &TestMessage{},
 			ExpectedResult: "",
 		},
 		{
 			Name:           "CustomStruct",
-			InputTopField:  "this.SomeString",
+			InputTopField:  "SomeString",
 			InputMessage:   &CustomTagStruct{},
 			ExpectedResult: "some_string",
 		},
 		{
 			Name:           "BadStruct",
-			InputTopField:  "this.SomeInt",
+			InputTopField:  "SomeInt",
 			InputMessage:   &BadStruct{},
 			ExpectedResult: "",
 		},
@@ -244,6 +243,30 @@ func TestGetFieldMaskForEmbeddedFields(t *testing.T) {
 			InputFieldMask:    completeEmbeddedFieldMask,
 			ExpectedFieldMask: embeddedFields,
 		},
+		{
+			Name:              "NoMatch",
+			TopLevelField:     "some_embedded",
+			InputFieldMask:    []string{"some_embedded"},
+			ExpectedFieldMask: []string{},
+		},
+		{
+			Name:              "PartialMatch",
+			TopLevelField:     "some_embedded",
+			InputFieldMask:    []string{"some_embedded.ids"},
+			ExpectedFieldMask: []string{"ids"},
+		},
+		{
+			Name:              "EmptyFM",
+			TopLevelField:     "some_embedded",
+			InputFieldMask:    []string{},
+			ExpectedFieldMask: []string{},
+		},
+		{
+			Name:              "OnlyTopField",
+			TopLevelField:     "some_embedded",
+			InputFieldMask:    completeEmbeddedFieldMask,
+			ExpectedFieldMask: embeddedFields,
+		},
 	} {
 		t.Run(tc.Name, func(t *testing.T) {
 			res := getFieldMaskForEmbeddedFields(tc.TopLevelField, tc.InputFieldMask)
@@ -267,6 +290,18 @@ func TestCallIfValidatorExists(t *testing.T) {
 			Message:      &Embedded{},
 			TopLevelPath: "some_embedded",
 			FullPaths:    completeEmbeddedFieldMask,
+		},
+		{
+			Name:         "NoTopLevelPath",
+			Message:      &Embedded{},
+			TopLevelPath: "",
+			FullPaths:    []string{},
+		},
+		{
+			Name:         "NoFieldMask",
+			Message:      &Embedded{},
+			TopLevelPath: "some_embedded",
+			FullPaths:    []string{},
 		},
 	} {
 		t.Run(tc.Name, func(t *testing.T) {

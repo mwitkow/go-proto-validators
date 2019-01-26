@@ -12,8 +12,8 @@ const (
 )
 
 var (
-	errInvalidMessage error = errors.New("Invalid Message")
-	errEmptyMessage   error = errors.New("Message is empty")
+	errInvalidMessage = errors.New("Invalid Message")
+	errEmptyMessage   = errors.New("Message is empty")
 )
 
 // Validator is a general interface that allows a message to be validated.
@@ -32,13 +32,23 @@ func CallValidatorIfExists(candidate interface{}, topLevelPath string, fullPaths
 }
 
 // GetFieldsToValidate extracts the names of fields for the corresponding fieldmasks.
-// If the fieldmask is empty, all the fields are returned.
-func GetFieldsToValidate(i interface{}, paths []string) ([]string, error) {
+// If the fieldmask is empty, an empty map is returned which means that nothing will be validated.
+func GetFieldsToValidate(i interface{}, paths []string) (map[string]string, error) {
+	if len(paths) == 0 {
+		return map[string]string{}, nil
+	}
 	val := reflect.ValueOf(i).Elem()
 	if !val.IsValid() || val.Type().NumField() == 0 {
-		return []string{}, errInvalidMessage
+		return map[string]string{}, errInvalidMessage
 	}
-	fields := []string{}
+	topPaths := []string{}
+	for _, path := range paths {
+		s := strings.Split(path, fieldMaskDelimiter)
+		if len(s) != 0 {
+			topPaths = append(topPaths, s[0])
+		}
+	}
+	fields := make(map[string]string)
 	for i := 0; i < val.Type().NumField(); i++ {
 		jsonTag := val.Type().Field(i).Tag.Get("json")
 		if jsonTag == "" || jsonTag == "-" {
@@ -46,17 +56,12 @@ func GetFieldsToValidate(i interface{}, paths []string) ([]string, error) {
 		}
 		s := strings.Split(jsonTag, jsonTagDelimiter)
 		if len(s) > 2 {
-			return []string{}, errInvalidMessage
-		}
-		// Add all fields to the list to be validated if no fieldmask paths are specified.
-		if len(paths) == 0 {
-			fields = append(fields, val.Type().Field(i).Name)
-			continue
+			return map[string]string{}, errInvalidMessage
 		}
 		// Add a field if it a part of the supplied list.
-		for _, st := range paths {
+		for _, st := range topPaths {
 			if s[0] == st {
-				fields = append(fields, val.Type().Field(i).Name)
+				fields[s[0]] = val.Type().Field(i).Name
 				break
 			}
 		}
@@ -66,19 +71,9 @@ func GetFieldsToValidate(i interface{}, paths []string) ([]string, error) {
 
 // ShouldBeValidated checks if the given field is a part of the list of fields to be validated.
 // This list is created using "GetFieldsToValidate".
-// If no fields are provided, it returns true.
-func ShouldBeValidated(name string, fieldNames []string) bool {
-	if len(fieldNames) == 0 {
-		return true
-	}
-	// The name as passed by the generator would be in the format this.FieldName
-	s := strings.Split(name, fieldMaskDelimiter)
-	if len(s) != 2 {
-		// When it's malformed, validate anyway since it's difficult validate errors here.
-		return true
-	}
-	for _, fieldName := range fieldNames {
-		if s[1] == fieldName {
+func ShouldBeValidated(name string, fields map[string]string) bool {
+	for _, fieldName := range fields {
+		if name == fieldName {
 			return true
 		}
 	}
@@ -86,7 +81,6 @@ func ShouldBeValidated(name string, fieldNames []string) bool {
 }
 
 // GetTopNameForField retrieves the top field name for the field.
-// the name is passed as "this.Fieldname"
 func GetTopNameForField(name string, i interface{}) string {
 	if name == "" || i == nil {
 		return ""
@@ -100,7 +94,7 @@ func GetTopNameForField(name string, i interface{}) string {
 		return ""
 	}
 	for i := 0; i < val.Type().NumField(); i++ {
-		if names[1] == val.Type().Field(i).Name {
+		if name == val.Type().Field(i).Name {
 			jsonTag := val.Type().Field(i).Tag.Get("json")
 			if jsonTag == "" || jsonTag == "-" {
 				return ""
@@ -122,12 +116,13 @@ func getFieldMaskForEmbeddedFields(topLevelMask string, paths []string) []string
 	for _, path := range paths {
 		subFields.Reset()
 		if path == "" {
-			continue //Sanity check for empty paths
+			continue
 		}
 		s := strings.Split(path, fieldMaskDelimiter)
 		if len(s) < 2 || s[0] != topLevelMask {
 			continue
 		}
+
 		// Join the rest of the sub-fields back into a single string.
 		for i := 1; i < len(s); i++ {
 			if s[i] == "" {
@@ -148,10 +143,7 @@ func getFieldMaskForEmbeddedFields(topLevelMask string, paths []string) []string
 	return embeddedFields
 }
 
-func GetFieldMaskForRepeatedFields(i interface{}, paths []string) ([]string, error) {
-	return nil, nil
-}
-
+// GetFieldMaskForOneOfFields ...
 func GetFieldMaskForOneOfFields(i interface{}, paths []string) ([]string, error) {
 	return nil, nil
 }

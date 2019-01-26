@@ -55,7 +55,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/TheThingsIndustries/go-proto-validators"
+	validator "github.com/TheThingsIndustries/go-proto-validators"
 	"github.com/TheThingsIndustries/go-proto-validators/errors"
 	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/proto"
