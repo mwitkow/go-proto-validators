@@ -17,8 +17,8 @@ message ValidatorMessage3 {
 	// String regex constraint tests.
 	string SomeString = 1 [(validator.field) = {regex: "^.{2,5}$"}];
 	repeated string SomeStringRep = 2 [(validator.field) = {regex: "^.{2,5}$"}];
-	string SomeStringNoQuotes = 3 [(validator.field) = {regex: "^[^\"]{2,5}$"}];
-	string SomeStringUnescaped = 4 [(validator.field) = {regex: "[\\p{L}\\p{N}]({\\p{L}\\p{N}_- ]{0,28}[\\p{L}\\p{N}])?."}];
+	// string SomeStringNoQuotes = 3 [(validator.field) = {regex: "^[^\"]{2,5}$"}];
+	// string SomeStringUnescaped = 4 [(validator.field) = {regex: "[\\p{L}\\p{N}]({\\p{L}\\p{N}_- ]{0,28}[\\p{L}\\p{N}])?."}];
 
 	// Strict integer inequality constraint tests.
 	uint32 SomeInt = 6 [(validator.field) = {int_gt: 10}];
@@ -31,9 +31,6 @@ message ValidatorMessage3 {
 	Embedded someEmbeddedExists = 12 [(validator.field) = {msg_exists : true}];
 	repeated Embedded someEmbeddedRep = 14;
 	repeated Embedded someEmbeddedRepNonNullable = 15 [(gogoproto.nullable) = false];
-
-	// Custom error tests.
-	int32 CustomErrorInt = 16 [(validator.field) = {int_lt: 10, human_error: "My Custom Error"}];
 
 	// Strict floating-point inequality constraint tests.
 	// With this epsilon value, the limits become

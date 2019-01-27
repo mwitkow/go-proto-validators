@@ -30,6 +30,6 @@ message GenericTestMessage {
 message GenericTestMessageWithRepeated{
 	string some_string = 1 [(validator.field) = {regex: "^.{2,5}$"}];
 	repeated Embedded embedded_repeated = 3;
-	repeated Embedded embedded_repeated_with_check = 4 [(validator.field) = {repeated_count_max: 10, repeated_count_min: 1}];
+	repeated Embedded embedded_repeated_with_check = 4 [(validator.field) = {repeated_count_max: 3, repeated_count_min: 1}];
 }
 

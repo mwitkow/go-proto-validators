@@ -21,6 +21,7 @@ message ValidatorMapMessage3 {
 
   map<string, ValueType> SomeExtMap = 2;
   map<int32, ValidatorMapMessage3.NestedType> SomeNestedMap = 3;
+  string something  = 4;
 }
 
 

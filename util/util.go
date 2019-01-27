@@ -62,7 +62,10 @@ func GetFieldsToValidate(i interface{}, paths []string) (map[string]string, erro
 			}
 		}
 		// Repeated items are checked outside the regular validators and need to be accounted for.
-		if val.Type().Field(i).Type.Kind() == reflect.Slice {
+		if val.Type().Field(i).Type.Kind() == reflect.Slice && val.Type().Field(i).Type.Elem().Kind() == reflect.Ptr {
+			fields[s[0]] = val.Type().Field(i).Name
+		}
+		if val.Type().Field(i).Type.Kind() == reflect.Ptr {
 			fields[s[0]] = val.Type().Field(i).Name
 		}
 	}

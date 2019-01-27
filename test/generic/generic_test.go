@@ -8,7 +8,7 @@ import (
 	"github.com/TheThingsIndustries/go-proto-validators/util"
 )
 
-var fullFieldMask = []string{"some_string", "embedded_mandatory", "embedded_not_mandatory", "field_mask", "embedded_mandatory.identifier", "embedded_mandatory.inner", "embedded_mandatory.field_mask", "embedded_mandatory.inner.id", "embedded_mandatory.inner.field_mask"}
+var fullFieldMask = []string{"some_string", "embedded_mandatory", "embedded_not_mandatory", "field_mask", "embedded_mandatory.identifier", "embedded_mandatory.inner", "embedded_mandatory.field_mask", "embedded_mandatory.inner.id", "embedded_mandatory.inner.field_mask", "embedded_not_mandatory.inner.id"}
 var outerOnlyFieldMask = []string{"some_string", "field_mask"}
 var outerAndMiddleOnlyFieldMask = []string{"some_string", "embedded_mandatory", "embedded_not_mandatory", "field_mask", "embedded_mandatory.identifier", "embedded_mandatory.field_mask"}
 var fullFieldMaskWithEmbedded = []string{"some_string", "some_bytes", "embedded_repeated", "embedded_repeated_with_check", "embedded_repeated.identifier", "embedded_repeated.some_int", "embedded_repeated.field_mask", "embedded_repeated.inner", "embedded_repeated.inner.id", "embedded_repeated.inner.some_int", "embedded_repeated.inner.field_mask", "embedded_repeated_with_check.identifier", "embedded_repeated_with_check.some_int", "embedded_repeated_with_check.field_mask", "embedded_repeated_with_check.inner", "embedded_repeated_with_check.inner.id", "embedded_repeated_with_check.inner.some_int", "embedded_repeated_with_check.inner.field_mask"}
@@ -143,6 +143,25 @@ func TestWithFullFieldMask(t *testing.T) {
 			ExpectedErrorType:      errors.Types_STRING_NOT_EMPTY,
 		},
 		{
+			Name: "InnerInvalidEmbeddedNotMandatory",
+			Message: &GenericTestMessage{
+				SomeString: "outer",
+				EmbeddedMandatory: &Embedded{
+					Identifier: "middle",
+				},
+				EmbeddedNotMandatory: &Embedded{
+					Identifier: "middle",
+					Inner: &InnerEmbedded{
+						Id: "",
+					},
+				},
+			},
+			FieldMask:              fullFieldMask,
+			ErrorExpected:          true,
+			ExpectedErrorFieldName: "embedded_not_mandatory.inner.id",
+			ExpectedErrorType:      errors.Types_STRING_NOT_EMPTY,
+		},
+		{
 			Name: "MiddleInvalid",
 			Message: &GenericTestMessage{
 				SomeString: "outer",
@@ -258,6 +277,16 @@ func TestWithPartialFieldMask(t *testing.T) {
 			},
 			FieldMask:     []string{"some_string"},
 			ErrorExpected: false,
+		},
+		{
+			Name: "MandatoryFields",
+			Message: &GenericTestMessage{
+				SomeString: "outer",
+			},
+			FieldMask:              []string{"some_string"},
+			ErrorExpected:          true,
+			ExpectedErrorFieldName: "embedded_mandatory",
+			ExpectedErrorType:      errors.Types_MSG_EXISTS,
 		},
 		{
 			Name: "InvalidOuterWithOnlyOnefield",
@@ -380,6 +409,42 @@ func TestWithRepeatedFields(t *testing.T) {
 			ErrorExpected: false,
 		},
 		{
+			Name: "InvalidOuterOnly",
+			Message: &GenericTestMessageWithRepeated{
+				SomeString:       "&*^456",
+				EmbeddedRepeated: nil,
+				EmbeddedRepeatedWithCheck: []*Embedded{
+					&Embedded{
+						Identifier: "middle",
+						Inner: &InnerEmbedded{
+							Id: "inner",
+						},
+					},
+				},
+			},
+			FieldMask:              []string{"some_string"},
+			ErrorExpected:          true,
+			ExpectedErrorFieldName: "some_string",
+			ExpectedErrorType:      errors.Types_STRING_REGEX,
+		},
+		{
+			Name: "NilEmbedded",
+			Message: &GenericTestMessageWithRepeated{
+				SomeString:       "test",
+				EmbeddedRepeated: nil,
+				EmbeddedRepeatedWithCheck: []*Embedded{
+					&Embedded{
+						Identifier: "middle",
+						Inner: &InnerEmbedded{
+							Id: "inner",
+						},
+					},
+				},
+			},
+			FieldMask:     []string{"some_string"},
+			ErrorExpected: false,
+		},
+		{
 			Name: "InvalidWithNilFieldMask",
 			Message: &GenericTestMessageWithRepeated{
 				SomeString:       "outer",
@@ -457,6 +522,51 @@ func TestWithRepeatedFields(t *testing.T) {
 			ErrorExpected:          true,
 			ExpectedErrorFieldName: "embedded_repeated.inner.id",
 			ExpectedErrorType:      errors.Types_STRING_NOT_EMPTY,
+		},
+		{
+			Name: "RepeatedInvalidMinFullFieldMask",
+			Message: &GenericTestMessageWithRepeated{
+				SomeString: "outer",
+				EmbeddedRepeated: []*Embedded{
+					&Embedded{
+						Identifier: "middle",
+					},
+				},
+				EmbeddedRepeatedWithCheck: []*Embedded{},
+			},
+			FieldMask:              fullFieldMaskWithEmbedded,
+			ErrorExpected:          true,
+			ExpectedErrorFieldName: "embedded_repeated_with_check",
+			ExpectedErrorType:      errors.Types_REPEATED_COUNT_MIN,
+		},
+		{
+			Name: "RepeatedInvalidMaxFullFieldMask",
+			Message: &GenericTestMessageWithRepeated{
+				SomeString: "outer",
+				EmbeddedRepeated: []*Embedded{
+					&Embedded{
+						Identifier: "middle",
+					},
+				},
+				EmbeddedRepeatedWithCheck: []*Embedded{
+					&Embedded{
+						Identifier: "middle",
+					},
+					&Embedded{
+						Identifier: "middle",
+					},
+					&Embedded{
+						Identifier: "middle",
+					},
+					&Embedded{
+						Identifier: "middle",
+					},
+				},
+			},
+			FieldMask:              fullFieldMaskWithEmbedded,
+			ErrorExpected:          true,
+			ExpectedErrorFieldName: "embedded_repeated_with_check",
+			ExpectedErrorType:      errors.Types_REPEATED_COUNT_MAX,
 		},
 		{
 			Name: "InvalidRepeatedWithFullFieldMask",
@@ -561,14 +671,3 @@ func TestWithRepeatedFields(t *testing.T) {
 		})
 	}
 }
-
-// func TestSomething(t *testing.T) {
-// 	msg := GenericTestMessage{
-// 		SomeString: "hello",
-// 		EmbeddedMandatory: &Embedded{
-// 			Identifier: "&*&",
-// 		},
-// 	}
-
-// 	fmt.Println(msg.Validate([]string{"some_string", "embedded_mandatory.identifier"}))
-// }

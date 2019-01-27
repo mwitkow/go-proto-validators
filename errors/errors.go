@@ -51,11 +51,6 @@ func GetErrorWithTopField(name string, err error) error {
 
 // FieldError wraps a given Validator error providing a message call stack.
 func FieldError(fieldName string, Type Types, err error) error {
-	if fErr, ok := err.(*ValidatorFieldError); ok {
-		fErr.fieldName = fieldName
-		fErr.errType = Type
-		return err
-	}
 	return &ValidatorFieldError{
 		nestedErr: err,
 		fieldName: fieldName,
