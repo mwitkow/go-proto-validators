@@ -449,11 +449,7 @@ func (p *plugin) generateRepeatedCountValidator(variableName string, ccTypeName 
 }
 
 func (p *plugin) generateErrorString(variableName string, errType errors.Types, fieldName string, specificError string, fv *validator.FieldValidator) {
-	if fv.GetHumanError() == "" {
-		p.P(`return `, p.errorPkg.Use(), `.FieldError(`, p.validatorPkg.Use(), `.GetProtoNameForField("`, fieldName, `", toBeValidated),`, p.errorPkg.Use(), `.Types_`, errType.String(), `, `, p.fmtPkg.Use(), ".Errorf( `field must ", specificError, "`", `))`)
-	} else {
-		p.P(`return `, p.errorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", fv.GetHumanError(), "`))")
-	}
+	p.P(`return `, p.errorPkg.Use(), `.FieldError(`, p.validatorPkg.Use(), `.GetProtoNameForField("`, fieldName, `", toBeValidated),`, p.errorPkg.Use(), `.Types_`, errType.String(), `, `, p.fmtPkg.Use(), ".Errorf( `field must ", specificError, "`", `))`)
 }
 
 func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *generator.Descriptor, field *descriptor.FieldDescriptorProto) bool {

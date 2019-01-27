@@ -33,9 +33,6 @@ func CallValidatorIfExists(candidate interface{}, topLevelPath string, fullPaths
 // GetFieldsToValidate extracts the names of fields for the corresponding fieldmasks.
 // If the fieldmask is empty, an empty map is returned which means that nothing will be validated.
 func GetFieldsToValidate(i interface{}, paths []string) (map[string]string, error) {
-	if len(paths) == 0 {
-		return map[string]string{}, nil
-	}
 	val := reflect.ValueOf(i).Elem()
 	if !val.IsValid() || val.Type().NumField() == 0 {
 		return map[string]string{}, errInvalidMessage
@@ -63,6 +60,10 @@ func GetFieldsToValidate(i interface{}, paths []string) (map[string]string, erro
 				fields[s[0]] = val.Type().Field(i).Name
 				break
 			}
+		}
+		// Repeated items are checked outside the regular validators and need to be accounted for.
+		if val.Type().Field(i).Type.Kind() == reflect.Slice {
+			fields[s[0]] = val.Type().Field(i).Name
 		}
 	}
 	return fields, nil
