@@ -120,25 +120,25 @@ func TestShouldBeValidated(t *testing.T) {
 	}{
 		{
 			Name:           "ShouldBeValidated",
-			InputField:     "SomeInt",
+			InputField:     "this.SomeInt",
 			ValidFields:    allFields,
 			ExpectedResult: true,
 		},
 		{
 			Name:           "ShouldNotBeValidated",
-			InputField:     "SomeInt",
-			ValidFields:    map[string]string{"some_string": "SomeString", "some_double": "SomeDouble", "some_repeated": "SomeRepeated", "some_embedded": "SomeEmbedded"},
-			ExpectedResult: false,
-		},
-		{
-			Name:           "MalFormedInput",
 			InputField:     "this.SomeInt",
 			ValidFields:    map[string]string{"some_string": "SomeString", "some_double": "SomeDouble", "some_repeated": "SomeRepeated", "some_embedded": "SomeEmbedded"},
 			ExpectedResult: false,
 		},
 		{
-			Name:           "NoFieldsToValidate",
+			Name:           "MalFormedInput",
 			InputField:     "SomeInt",
+			ValidFields:    map[string]string{"some_string": "SomeString", "some_double": "SomeDouble", "some_repeated": "SomeRepeated", "some_embedded": "SomeEmbedded"},
+			ExpectedResult: true,
+		},
+		{
+			Name:           "NoFieldsToValidate",
+			InputField:     "this.SomeInt",
 			ValidFields:    map[string]string{},
 			ExpectedResult: false,
 		},
@@ -152,53 +152,100 @@ func TestShouldBeValidated(t *testing.T) {
 	}
 }
 
-func TestGetTopNameForField(t *testing.T) {
+func TestGetProtoNameForField(t *testing.T) {
 	for _, tc := range []struct {
 		Name           string
-		InputTopField  string
-		InputMessage   interface{}
+		InputField     string
+		ValidFields    map[string]string
 		ExpectedResult string
 	}{
 		{
-			Name:           "ValidInputs",
-			InputTopField:  "SomeInt",
-			InputMessage:   &TestMessage{},
+			Name:           "Exists",
+			InputField:     "SomeInt",
+			ValidFields:    allFields,
 			ExpectedResult: "some_int",
 		},
 		{
-			Name:           "NilMessage",
-			InputTopField:  "SomeInt",
-			InputMessage:   nil,
+			Name:           "NoMatch",
+			InputField:     "SomeInt",
+			ValidFields:    map[string]string{"some_string": "SomeString", "some_double": "SomeDouble", "some_repeated": "SomeRepeated", "some_embedded": "SomeEmbedded"},
 			ExpectedResult: "",
 		},
 		{
-			Name:           "MalformedTopField",
-			InputTopField:  "this.SomeInt",
-			InputMessage:   &TestMessage{},
-			ExpectedResult: "",
-		},
-		{
-			Name:           "CustomStruct",
-			InputTopField:  "SomeString",
-			InputMessage:   &CustomTagStruct{},
+			Name:           "ExtendedName",
+			InputField:     "this.SomeString",
+			ValidFields:    map[string]string{"some_string": "SomeString", "some_double": "SomeDouble", "some_repeated": "SomeRepeated", "some_embedded": "SomeEmbedded"},
 			ExpectedResult: "some_string",
 		},
 		{
-			Name:           "BadStruct",
-			InputTopField:  "SomeInt",
-			InputMessage:   &BadStruct{},
+			Name:           "MalFormedInput",
+			InputField:     "this.",
+			ValidFields:    map[string]string{"some_string": "SomeString", "some_double": "SomeDouble", "some_repeated": "SomeRepeated", "some_embedded": "SomeEmbedded"},
+			ExpectedResult: "",
+		},
+		{
+			Name:           "NoFieldsToValidate",
+			InputField:     "SomeInt",
+			ValidFields:    map[string]string{},
 			ExpectedResult: "",
 		},
 	} {
 		t.Run(tc.Name, func(t *testing.T) {
-			res := GetTopNameForField(tc.InputTopField, tc.InputMessage)
+			res := GetProtoNameForField(tc.InputField, tc.ValidFields)
 			if tc.ExpectedResult != res {
 				t.Fatal(fmt.Sprintf("Expected %v, received %v", tc.ExpectedResult, res))
 			}
 		})
 	}
-
 }
+
+// func TestGetTopNameForField(t *testing.T) {
+// 	for _, tc := range []struct {
+// 		Name           string
+// 		InputTopField  string
+// 		InputMessage   interface{}
+// 		ExpectedResult string
+// 	}{
+// 		{
+// 			Name:           "ValidInputs",
+// 			InputTopField:  "this.SomeInt",
+// 			InputMessage:   &TestMessage{},
+// 			ExpectedResult: "some_int",
+// 		},
+// 		{
+// 			Name:           "NilMessage",
+// 			InputTopField:  "this.SomeInt",
+// 			InputMessage:   nil,
+// 			ExpectedResult: "",
+// 		},
+// 		{
+// 			Name:           "MalformedTopField",
+// 			InputTopField:  "SomeInt",
+// 			InputMessage:   &TestMessage{},
+// 			ExpectedResult: "",
+// 		},
+// 		{
+// 			Name:           "CustomStruct",
+// 			InputTopField:  "this.SomeString",
+// 			InputMessage:   &CustomTagStruct{},
+// 			ExpectedResult: "some_string",
+// 		},
+// 		{
+// 			Name:           "BadStruct",
+// 			InputTopField:  "this.SomeInt",
+// 			InputMessage:   &BadStruct{},
+// 			ExpectedResult: "",
+// 		},
+// 	} {
+// 		t.Run(tc.Name, func(t *testing.T) {
+// 			res := GetTopNameForField(tc.InputTopField, tc.InputMessage)
+// 			if tc.ExpectedResult != res {
+// 				t.Fatal(fmt.Sprintf("Expected %v, received %v", tc.ExpectedResult, res))
+// 			}
+// 		})
+// 	}
+
+// }
 
 func TestGetFieldMaskForEmbeddedFields(t *testing.T) {
 	for _, tc := range []struct {

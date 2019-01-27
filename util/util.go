@@ -23,7 +23,6 @@ type Validator interface {
 
 // CallValidatorIfExists is used to call the validator for the embedded message if it exists.
 // It generates the fieldmask for the sub-field before calling it.
-// The conditional field shouldBeCalled is used to prevent this function from calling the sub validator based on the parent fieldmask.
 func CallValidatorIfExists(candidate interface{}, topLevelPath string, fullPaths []string) error {
 	if validator, ok := candidate.(Validator); ok {
 		return validator.Validate(getFieldMaskForEmbeddedFields(topLevelPath, fullPaths))
@@ -72,38 +71,28 @@ func GetFieldsToValidate(i interface{}, paths []string) (map[string]string, erro
 // ShouldBeValidated checks if the given field is a part of the list of fields to be validated.
 // This list is created using "GetFieldsToValidate".
 func ShouldBeValidated(name string, fields map[string]string) bool {
+	names := strings.Split(name, fieldMaskDelimiter)
+	if len(names) != 2 {
+		return true
+	}
 	for _, fieldName := range fields {
-		if name == fieldName {
+		if names[1] == fieldName {
 			return true
 		}
 	}
 	return false
 }
 
-// GetTopNameForField retrieves the top field name for the field.
-func GetTopNameForField(name string, i interface{}) string {
-	if name == "" || i == nil {
-		return ""
+// GetProtoNameForField returns the proto name for a field so that it can be returned in an error.
+func GetProtoNameForField(name string, fields map[string]string) string {
+	field := name
+	names := strings.Split(name, fieldMaskDelimiter)
+	if len(names) == 2 {
+		field = names[1]
 	}
-	names := strings.Split(name, ".")
-	if len(names) != 2 {
-		return ""
-	}
-	val := reflect.ValueOf(i).Elem()
-	if !val.IsValid() || val.Type().NumField() == 0 {
-		return ""
-	}
-	for i := 0; i < val.Type().NumField(); i++ {
-		if name == val.Type().Field(i).Name {
-			jsonTag := val.Type().Field(i).Tag.Get("json")
-			if jsonTag == "" || jsonTag == "-" {
-				return ""
-			}
-			s := strings.Split(jsonTag, jsonTagDelimiter)
-			if len(s) > 2 {
-				return ""
-			}
-			return s[0]
+	for protoName, fieldName := range fields {
+		if field == fieldName {
+			return protoName
 		}
 	}
 	return ""

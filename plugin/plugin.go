@@ -216,7 +216,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				if nullable && !repeated {
 					p.P(`if nil == `, variableName, `{`)
 					p.In()
-					p.P(`return `, p.errorPkg.Use(), `.FieldError("`, fieldName, `",`, p.errorPkg.Use(), `.Types_`, errors.Types_MSG_EXISTS.String(), `, `, p.fmtPkg.Use(), `.Errorf("message must exist"))`)
+					p.P(`return `, p.errorPkg.Use(), `.FieldError(`, p.validatorPkg.Use(), `.GetProtoNameForField("`, fieldName, `", toBeValidated),`, p.errorPkg.Use(), `.Types_`, errors.Types_MSG_EXISTS.String(), `, `, p.fmtPkg.Use(), `.Errorf("message must exist"))`)
 					p.Out()
 					p.P(`}`)
 				} else if repeated {
@@ -237,13 +237,13 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			}
 
 			if repeated {
-				p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(item,`, p.validatorPkg.Use(), `.GetTopNameForField("`, variableName, `", this), paths ); err != nil {`)
+				p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(item,`, p.validatorPkg.Use(), `.GetProtoNameForField("`, variableName, `", toBeValidated), paths ); err != nil {`)
 			} else {
-				p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `,`, p.validatorPkg.Use(), `.GetTopNameForField("`, variableName, `", this), paths ); err != nil {`)
+				p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `,`, p.validatorPkg.Use(), `.GetProtoNameForField("`, variableName, `", toBeValidated), paths ); err != nil {`)
 			}
 
 			p.In()
-			p.P(`return err`)
+			p.P(`return `, p.errorPkg.Use(), `.GetErrorWithTopField(`, p.validatorPkg.Use(), `.GetProtoNameForField("`, variableName, `",toBeValidated),err)`)
 			p.Out()
 			p.P(`}`)
 			if nullable {
@@ -450,7 +450,7 @@ func (p *plugin) generateRepeatedCountValidator(variableName string, ccTypeName 
 
 func (p *plugin) generateErrorString(variableName string, errType errors.Types, fieldName string, specificError string, fv *validator.FieldValidator) {
 	if fv.GetHumanError() == "" {
-		p.P(`return `, p.errorPkg.Use(), `.FieldError("`, fieldName, `",`, p.errorPkg.Use(), `.Types_`, errType.String(), `, `, p.fmtPkg.Use(), ".Errorf( `field must ", specificError, "`", `))`)
+		p.P(`return `, p.errorPkg.Use(), `.FieldError(`, p.validatorPkg.Use(), `.GetProtoNameForField("`, fieldName, `", toBeValidated),`, p.errorPkg.Use(), `.Types_`, errType.String(), `, `, p.fmtPkg.Use(), ".Errorf( `field must ", specificError, "`", `))`)
 	} else {
 		p.P(`return `, p.errorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", fv.GetHumanError(), "`))")
 	}

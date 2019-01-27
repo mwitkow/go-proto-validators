@@ -87,3 +87,6 @@ Session.vim
 .Trash-*
 
 # Created by .ignore support plugin (hsz.mobi)
+
+# Test Coverage files
+cover.*

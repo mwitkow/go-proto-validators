@@ -3,7 +3,7 @@ package errors
 import "testing"
 
 func TestErrorMethods(t *testing.T) {
-	errString := "FIELD_ERROR_TYPE_INT_GT: SomeInt: field must be greater than '500'"
+	errString := "SomeInt: INT_GT: field must be greater than '500'"
 
 	errType := GetType(errString)
 	if errType != "INT_GT" {
