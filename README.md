@@ -3,9 +3,10 @@
 [![Travis Build](https://travis-ci.org/mwitkow/go-proto-validators.svg)](https://travis-ci.org/mwitkow/go-proto-validators)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-A `protoc` plugin that generates `Validate() error` functions on Go proto `struct`s based on field options inside `.proto` 
-files. The validation functions are code-generated and thus don't suffer on performance from tag-based reflection on
-deeply-nested messages.
+A `protoc` plugin that generates `Validate([]paths) error` functions on Go proto `struct`s based on field options inside `.proto` 
+files.
+
+It incorporates [fieldmasks](https://developers.google.com/protocol-buffers/docs/reference/csharp/class/google/protobuf/well-known-types/field-mask) into the validators thereby providing optional validation on fields. By default, no fields are validated. This allows for each field that needs to be validated  to be specified by the fieldmask.
 
 ## Paint me a code picture
 
@@ -38,34 +39,40 @@ Second, the expected values in fields are now part of the contract `.proto` file
 Third, the generated code is understandable and has clear understandable error messages. Take a look:
 
 ```go
-func (this *InnerMessage) Validate() error {
-	if !(this.SomeInteger > 0) {
-		return fmt.Errorf("validation error: InnerMessage.SomeInteger must be greater than '0'")
+func (this *InnerMessage) Validate(paths []string) error {
+	toBeValidated, err := github_com_TheThingsIndustries_go_proto_validators_util.GetFieldsToValidate(this, paths)
+	if err != nil {
+		return err
 	}
-	if !(this.SomeInteger < 100) {
-		return fmt.Errorf("validation error: InnerMessage.SomeInteger must be less than '100'")
+	_ = toBeValidated
+
+	if !(this.SomeInteger > 0) && (github_com_TheThingsIndustries_go_proto_validators_util.ShouldBeValidated("this.SomeInteger", toBeValidated)) {
+		return github_com_TheThingsIndustries_go_proto_validators_errors.FieldError(github_com_TheThingsIndustries_go_proto_validators_util.GetProtoNameForField("SomeInteger", toBeValidated), github_com_TheThingsIndustries_go_proto_validators_errors.Types_INT_GT, fmt.Errorf(`field must be greater than '0'`))
 	}
-	if !(this.SomeFloat >= 0) {
-		return fmt.Errorf("validation error: InnerMessage.SomeFloat must be greater than or equal to '0'")
-	}
-	if !(this.SomeFloat <= 1) {
-		return fmt.Errorf("validation error: InnerMessage.SomeFloat must be less than or equal to '1'")
+	if !(this.SomeInteger < 100) && (github_com_TheThingsIndustries_go_proto_validators_util.ShouldBeValidated("this.SomeInteger", toBeValidated)) {
+		return github_com_TheThingsIndustries_go_proto_validators_errors.FieldError(github_com_TheThingsIndustries_go_proto_validators_util.GetProtoNameForField("SomeInteger", toBeValidated), github_com_TheThingsIndustries_go_proto_validators_errors.Types_INT_LT, fmt.Errorf(`field must be lesser than '100'`))
 	}
 	return nil
 }
 
-var _regex_OuterMessage_ImportantString = regexp.MustCompile("^[a-z]{2,5}$")
+var _regex_OuterMessage_ImportantString = regexp.MustCompile(`^[a-z]{2,5}$`)
 
-func (this *OuterMessage) Validate() error {
-	if !_regex_OuterMessage_ImportantString.MatchString(this.ImportantString) {
-		return fmt.Errorf("validation error: OuterMessage.ImportantString must conform to regex '^[a-z]{2,5}$'")
+func (this *OuterMessage) Validate(paths []string) error {
+	toBeValidated, err := github_com_TheThingsIndustries_go_proto_validators_util.GetFieldsToValidate(this, paths)
+	if err != nil {
+		return err
+	}
+	_ = toBeValidated
+
+	if !_regex_OuterMessage_ImportantString.MatchString(this.ImportantString) && (github_com_TheThingsIndustries_go_proto_validators_util.ShouldBeValidated("this.ImportantString", toBeValidated)) {
+		return github_com_TheThingsIndustries_go_proto_validators_errors.FieldError(github_com_TheThingsIndustries_go_proto_validators_util.GetProtoNameForField("ImportantString", toBeValidated), github_com_TheThingsIndustries_go_proto_validators_errors.Types_STRING_REGEX, fmt.Errorf(`field must be a string conforming to the regex "^[a-z]{2,5}$"`))
 	}
 	if nil == this.Inner {
-		return fmt.Errorf("validation error: OuterMessage.Inner message must exist")
+		return github_com_TheThingsIndustries_go_proto_validators_errors.FieldError(github_com_TheThingsIndustries_go_proto_validators_util.GetProtoNameForField("Inner", toBeValidated), github_com_TheThingsIndustries_go_proto_validators_errors.Types_MSG_EXISTS, fmt.Errorf("message must exist"))
 	}
-	if this.Inner != nil {
-		if err := validators.CallValidatorIfExists(this.Inner); err != nil {
-			return err
+	if (this.Inner != nil) && (github_com_TheThingsIndustries_go_proto_validators_util.ShouldBeValidated("this.Inner", toBeValidated)) {
+		if err := github_com_TheThingsIndustries_go_proto_validators_util.CallValidatorIfExists(this.Inner, github_com_TheThingsIndustries_go_proto_validators_util.GetProtoNameForField("this.Inner", toBeValidated), paths); err != nil {
+			return github_com_TheThingsIndustries_go_proto_validators_errors.GetErrorWithTopField(github_com_TheThingsIndustries_go_proto_validators_util.GetProtoNameForField("this.Inner", toBeValidated), err)
 		}
 	}
 	return nil
@@ -86,30 +93,9 @@ Then, do the usual
 go get github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
 ```
 
-Your `protoc` builds probably look very simple like:
+Check the [Makefile](/Makefile) for installing this plugin.
 
-```sh
-protoc  \
-	--proto_path=. \
-	--go_out=. \
-	*.proto
-```
-
-That's fine, until you encounter `.proto` includes. Because `go-proto-validators` uses field options inside the `.proto` 
-files themselves, it's `.proto` definition (and the Google `descriptor.proto` itself) need to on the `protoc` include
-path. Hence the above becomes:
-
-```sh
-protoc  \
-	--proto_path=${GOPATH}/src \
-	--proto_path=${GOPATH}/src/github.com/google/protobuf/src \
-	--proto_path=. \
-	--go_out=. \
-	--govalidators_out=. \
-	*.proto
-```
-
-Or with gogo protobufs:
+The following is an example of using this plugin as part of your proto generation.
 
 ```sh
 protoc  \

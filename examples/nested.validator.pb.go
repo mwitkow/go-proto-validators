@@ -3,40 +3,55 @@
 
 package validator_examples
 
-import regexp "regexp"
-import fmt "fmt"
-import github_com_TheThingsIndustries_go_proto_validators "github.com/TheThingsIndustries/go-proto-validators"
-import proto "github.com/golang/protobuf/proto"
-import math "math"
-import _ "github.com/TheThingsIndustries/go-proto-validators"
+import (
+	fmt "fmt"
+	math "math"
+	proto "github.com/golang/protobuf/proto"
+	_ "github.com/TheThingsIndustries/go-proto-validators"
+	regexp "regexp"
+	github_com_TheThingsIndustries_go_proto_validators_util "github.com/TheThingsIndustries/go-proto-validators/util"
+	github_com_TheThingsIndustries_go_proto_validators_errors "github.com/TheThingsIndustries/go-proto-validators/errors"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-func (this *InnerMessage) Validate() error {
-	if !(this.SomeInteger > 0) {
-		return github_com_TheThingsIndustries_go_proto_validators.FieldError("SomeInteger", fmt.Errorf(`value '%v' must be greater than '0'`, this.SomeInteger))
+func (this *InnerMessage) Validate(paths []string) error {
+	toBeValidated, err := github_com_TheThingsIndustries_go_proto_validators_util.GetFieldsToValidate(this, paths)
+	if err != nil {
+		return err
 	}
-	if !(this.SomeInteger < 100) {
-		return github_com_TheThingsIndustries_go_proto_validators.FieldError("SomeInteger", fmt.Errorf(`value '%v' must be less than '100'`, this.SomeInteger))
+	_ = toBeValidated
+
+	if !(this.SomeInteger > 0) && (github_com_TheThingsIndustries_go_proto_validators_util.ShouldBeValidated("this.SomeInteger", toBeValidated)) {
+		return github_com_TheThingsIndustries_go_proto_validators_errors.FieldError(github_com_TheThingsIndustries_go_proto_validators_util.GetProtoNameForField("SomeInteger", toBeValidated), github_com_TheThingsIndustries_go_proto_validators_errors.Types_INT_GT, fmt.Errorf(`field must be greater than '0'`))
+	}
+	if !(this.SomeInteger < 100) && (github_com_TheThingsIndustries_go_proto_validators_util.ShouldBeValidated("this.SomeInteger", toBeValidated)) {
+		return github_com_TheThingsIndustries_go_proto_validators_errors.FieldError(github_com_TheThingsIndustries_go_proto_validators_util.GetProtoNameForField("SomeInteger", toBeValidated), github_com_TheThingsIndustries_go_proto_validators_errors.Types_INT_LT, fmt.Errorf(`field must be lesser than '100'`))
 	}
 	return nil
 }
 
 var _regex_OuterMessage_ImportantString = regexp.MustCompile(`^[a-z]{2,5}$`)
 
-func (this *OuterMessage) Validate() error {
-	if !_regex_OuterMessage_ImportantString.MatchString(this.ImportantString) {
-		return github_com_TheThingsIndustries_go_proto_validators.FieldError("ImportantString", fmt.Errorf(`value '%v' must be a string conforming to regex "^[a-z]{2,5}$"`, this.ImportantString))
+func (this *OuterMessage) Validate(paths []string) error {
+	toBeValidated, err := github_com_TheThingsIndustries_go_proto_validators_util.GetFieldsToValidate(this, paths)
+	if err != nil {
+		return err
+	}
+	_ = toBeValidated
+
+	if !_regex_OuterMessage_ImportantString.MatchString(this.ImportantString) && (github_com_TheThingsIndustries_go_proto_validators_util.ShouldBeValidated("this.ImportantString", toBeValidated)) {
+		return github_com_TheThingsIndustries_go_proto_validators_errors.FieldError(github_com_TheThingsIndustries_go_proto_validators_util.GetProtoNameForField("ImportantString", toBeValidated), github_com_TheThingsIndustries_go_proto_validators_errors.Types_STRING_REGEX, fmt.Errorf(`field must be a string conforming to the regex "^[a-z]{2,5}$"`))
 	}
 	if nil == this.Inner {
-		return github_com_TheThingsIndustries_go_proto_validators.FieldError("Inner", fmt.Errorf("message must exist"))
+		return github_com_TheThingsIndustries_go_proto_validators_errors.FieldError(github_com_TheThingsIndustries_go_proto_validators_util.GetProtoNameForField("Inner", toBeValidated), github_com_TheThingsIndustries_go_proto_validators_errors.Types_MSG_EXISTS, fmt.Errorf("message must exist"))
 	}
-	if this.Inner != nil {
-		if err := github_com_TheThingsIndustries_go_proto_validators.CallValidatorIfExists(this.Inner); err != nil {
-			return github_com_TheThingsIndustries_go_proto_validators.FieldError("Inner", err)
+	if (this.Inner != nil) && (github_com_TheThingsIndustries_go_proto_validators_util.ShouldBeValidated("this.Inner", toBeValidated)) {
+		if err := github_com_TheThingsIndustries_go_proto_validators_util.CallValidatorIfExists(this.Inner, github_com_TheThingsIndustries_go_proto_validators_util.GetProtoNameForField("this.Inner", toBeValidated), paths); err != nil {
+			return github_com_TheThingsIndustries_go_proto_validators_errors.GetErrorWithTopField(github_com_TheThingsIndustries_go_proto_validators_util.GetProtoNameForField("this.Inner", toBeValidated), err)
 		}
 	}
 	return nil
