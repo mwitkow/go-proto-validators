@@ -68,12 +68,10 @@ message FieldValidator {
   optional int64 length_eq = 16;
   // Requires that the value is in the enum.
   optional bool is_in_enum = 17;
-  // Field value checks if value is the version of uuid specifed
-  // availble uuid versions are: 0,1,2,3,4,5
-  // 0 = all uuid versions
-  // should be used as:
-  // string user_id = 3 [(validator.field) = {uuid: 4}];
-  optional int32 uuid = 18;
+  // Ensures that a string value is in UUID format.
+  // uuid_ver specifies the valid UUID versions. Valid values are: 0-5.
+  // If uuid_ver is 0 all UUID versions are accepted.
+  optional int32 uuid_ver = 18;
 }
 
 message OneofValidator {

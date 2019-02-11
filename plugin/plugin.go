@@ -154,10 +154,10 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	for _, field := range message.Field {
 		validator := getFieldValidatorIfAny(field)
-		if validator != nil && (validator.Regex != nil || validator.Uuid != nil) {
+		if validator != nil && (validator.Regex != nil || validator.UuidVer != nil) {
 			fieldName := p.GetOneOfFieldName(message, field)
-			if validator.Uuid != nil {
-				if uuid, err := getUUIDRegex(validator.GetUuid()); err != nil {
+			if validator.UuidVer != nil {
+				if uuid, err := getUUIDRegex(int(validator.GetUuidVer())); err != nil {
 					fmt.Fprintf(
 						os.Stderr,
 						"WARNING: field %v.%v error %s.\n",
@@ -515,9 +515,9 @@ func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, 
 }
 
 func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	if fv.Regex != nil || fv.GetUuid() != 0 {
-		if fv.Uuid != nil {
-			if uuid, err := getUUIDRegex(fv.GetUuid()); err == nil {
+	if fv.Regex != nil || fv.GetUuidVer() != 0 {
+		if fv.UuidVer != nil {
+			if uuid, err := getUUIDRegex(int(fv.GetUuidVer())); err == nil {
 				fv.Regex = &uuid
 			}
 		}
