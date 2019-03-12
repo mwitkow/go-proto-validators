@@ -4,7 +4,7 @@
 #
 # This script installs protobuf compiler `protoc` into PATH.
 
-version=${PROTOBUF_VERSION:-"3.0.0-beta-2"}
+version=${PROTOBUF_VERSION:-"3.7.0"}
 dst_dir="${HOME}/soft/protobuf"
 
 # Fail on issues.
