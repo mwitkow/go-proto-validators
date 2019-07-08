@@ -581,7 +581,17 @@ func (p *plugin) validatorWithNonRepeatedConstraint(fv *validator.FieldValidator
 	// Need to use reflection in order to be future-proof for new types of constraints.
 	v := reflect.ValueOf(*fv)
 	for i := 0; i < v.NumField(); i++ {
-		if v.Type().Field(i).Name != "RepeatedCountMin" && v.Type().Field(i).Name != "RepeatedCountMax" && v.Field(i).Pointer() != 0 {
+		fieldName := v.Type().Field(i).Name
+
+		// All known validators will have a pointer type and we should skip any fields
+		// that are not pointers (i.e unknown fields, etc) as well as 'nil' pointers that
+		// don't lead to anything.
+		if v.Type().Field(i).Type.Kind() != reflect.Ptr || v.Field(i).IsNil() {
+			continue
+		}
+
+		// Identify non-repeated constraints based on their name.
+		if fieldName != "RepeatedCountMin" && fieldName != "RepeatedCountMax" {
 			return true
 		}
 	}
