@@ -1,21 +1,38 @@
 #!/usr/bin/env bash
 
 function install_protobuf() {
-    local deps_dir version
-    version="${PROTOBUF_VERSION:-"3.0.2"}"
+    if [[ -z "${PROTOBUF_VERSION:-}" ]]; then
+        echo "Please set the version of protobuf to use via the PROTOBUF_VERSION environment variable."
+        exit 1
+    fi
+
+    local deps_dir os_string version
+    version="${PROTOBUF_VERSION}"
     deps_dir="${PROJECT_DIR}/deps"
+    case "$(uname -s | tr "[:upper:]" "[:lower:]")" in
+        linux)
+            os_string="linux"
+            ;;
+        darwin)
+            os_string="osx"
+            ;;
+        *)
+            echo "This platform is not supported for running this script."
+            exit 1
+            ;;
+    esac
 
     if [[ ! -e "${deps_dir}/${version}.zip" ]]; then
         echo "Downloading and installing protoc ${version}."
         mkdir -p "${deps_dir}"
 
-        pushd "${deps_dir}"
+        pushd "${deps_dir}" || exit 1
         rm -rf "${version}.zip" "${version}.zip.tmp" "bin" "include"
-        wget "https://github.com/google/protobuf/releases/download/v${version}/protoc-${version}-linux-x86_64.zip" -O "${version}.zip.tmp"
+        wget "https://github.com/google/protobuf/releases/download/v${version}/protoc-${version}-${os_string}-x86_64.zip" -O "${version}.zip.tmp"
         unzip -o "${version}.zip.tmp"
         chmod 755 "bin/protoc"
         mv "${version}.zip.tmp" "${version}.zip"
-        popd
+        popd || exit 1
     else
         echo "Reusing existing protoc ${version}."
     fi
