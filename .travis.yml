@@ -3,7 +3,7 @@ language: go
 env:
   global:
     - GO111MODULE=on
-    - PROTOBUF_VERSION="3.0.2"
+    - PROTOBUF_VERSION="3.8.0"
 
 notifications:
   email: false
