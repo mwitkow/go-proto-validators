@@ -3,9 +3,21 @@
 [![Travis Build](https://travis-ci.org/mwitkow/go-proto-validators.svg)](https://travis-ci.org/mwitkow/go-proto-validators)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-A `protoc` plugin that generates `Validate() error` functions on Go proto `struct`s based on field options inside `.proto` 
+A `protoc` plugin that generates `Validate() error` functions on Go proto `struct`s based on field options inside `.proto`
 files. The validation functions are code-generated and thus don't suffer on performance from tag-based reflection on
 deeply-nested messages.
+
+## Requirements
+
+Using Protobuf validators is currently verified to work with:
+
+- Go 1.11 & 1.12
+- [Protobuf](https://github.com/protocolbuffers/protobuf) @ `v3.0.2`
+- [Go Protobuf](https://github.com/golang/protobuf) @ `v1.3.1`
+- [Gogo Protobuf](https://github.com/gogo/protobuf) @ `v1.2.1`
+
+It _should_ still be possible to use it in project using earlier Go versions. However if you want to contribute to this
+repository you'll need at least 1.11 for Go module support.
 
 ## Paint me a code picture
 
@@ -90,9 +102,9 @@ Your `protoc` builds probably look very simple like:
 
 ```sh
 protoc  \
-	--proto_path=. \
-	--go_out=. \
-	*.proto
+  --proto_path=. \
+  --go_out=. \
+  *.proto
 ```
 
 That's fine, until you encounter `.proto` includes. Because `go-proto-validators` uses field options inside the `.proto` 
@@ -101,32 +113,29 @@ path. Hence the above becomes:
 
 ```sh
 protoc  \
-	--proto_path=${GOPATH}/src \
-	--proto_path=${GOPATH}/src/github.com/google/protobuf/src \
-	--proto_path=. \
-	--go_out=. \
-	--govalidators_out=. \
-	*.proto
+  --proto_path=${GOPATH}/src \
+  --proto_path=${GOPATH}/src/github.com/google/protobuf/src \
+  --proto_path=. \
+  --go_out=. \
+  --govalidators_out=. \
+  *.proto
 ```
 
 Or with gogo protobufs:
 
 ```sh
 protoc  \
-	--proto_path=${GOPATH}/src \
-	--proto_path=${GOPATH}/src/github.com/gogo/protobuf/protobuf \
-	--proto_path=. \
-	--gogo_out=. \
-	--govalidators_out=gogoimport=true:. \
-	*.proto
+  --proto_path=${GOPATH}/src \
+  --proto_path=${GOPATH}/src/github.com/gogo/protobuf/protobuf \
+  --proto_path=. \
+  --gogo_out=. \
+  --govalidators_out=gogoimport=true:. \
+  *.proto
 ```
 
 Basically the magical incantation (apart from includes) is the `--govalidators_out`. That triggers the 
 `protoc-gen-govalidators` plugin to generate `mymessage.validator.pb.go`. That's it :)
 
-###License
+## License
 
 `go-proto-validators` is released under the Apache 2.0 license. See the [LICENSE](LICENSE) file for details.
-
-
-
