@@ -64,7 +64,7 @@ func buildProto3(someString string, someInt uint32, identifier string, someValue
 		RepeatedBaseType: []int32{},
 	}
 
-	goodProto3.Repeated = make([]int32, repeatedCount, repeatedCount)
+	goodProto3.Repeated = make([]int32, repeatedCount)
 
 	return goodProto3
 }
@@ -122,7 +122,7 @@ func buildProto2(someString string, someInt uint32, identifier string, someValue
 		RepeatedBaseType:   []int32{},
 	}
 
-	goodProto2.Repeated = make([]int32, repeatedCount, repeatedCount)
+	goodProto2.Repeated = make([]int32, repeatedCount)
 
 	return goodProto2
 }

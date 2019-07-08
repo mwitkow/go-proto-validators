@@ -60,7 +60,7 @@ import (
 	descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/vanity"
-	"github.com/mwitkow/go-proto-validators"
+	validator "github.com/mwitkow/go-proto-validators"
 )
 
 type plugin struct {
@@ -68,7 +68,6 @@ type plugin struct {
 	generator.PluginImports
 	regexPkg      generator.Single
 	fmtPkg        generator.Single
-	protoPkg      generator.Single
 	validatorPkg  generator.Single
 	useGogoImport bool
 }
@@ -568,21 +567,6 @@ func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *gener
 		msg = file.GetNestedMessage(message.DescriptorProto, field.GetTypeName())
 	}
 	return msg.GetOptions().GetMapEntry()
-}
-
-func (p *plugin) validatorWithAnyConstraint(fv *validator.FieldValidator) bool {
-	if fv == nil {
-		return false
-	}
-
-	// Need to use reflection in order to be future-proof for new types of constraints.
-	v := reflect.ValueOf(fv)
-	for i := 0; i < v.NumField(); i++ {
-		if v.Field(i).Interface() != nil {
-			return true
-		}
-	}
-	return false
 }
 
 func (p *plugin) validatorWithMessageExists(fv *validator.FieldValidator) bool {
