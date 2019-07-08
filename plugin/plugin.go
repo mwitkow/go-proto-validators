@@ -60,7 +60,7 @@ import (
 	descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/vanity"
-	"github.com/mwitkow/go-proto-validators"
+	validator "github.com/mwitkow/go-proto-validators"
 )
 
 type plugin struct {
@@ -68,7 +68,6 @@ type plugin struct {
 	generator.PluginImports
 	regexPkg      generator.Single
 	fmtPkg        generator.Single
-	protoPkg      generator.Single
 	validatorPkg  generator.Single
 	useGogoImport bool
 }
@@ -570,21 +569,6 @@ func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *gener
 	return msg.GetOptions().GetMapEntry()
 }
 
-func (p *plugin) validatorWithAnyConstraint(fv *validator.FieldValidator) bool {
-	if fv == nil {
-		return false
-	}
-
-	// Need to use reflection in order to be future-proof for new types of constraints.
-	v := reflect.ValueOf(fv)
-	for i := 0; i < v.NumField(); i++ {
-		if v.Field(i).Interface() != nil {
-			return true
-		}
-	}
-	return false
-}
-
 func (p *plugin) validatorWithMessageExists(fv *validator.FieldValidator) bool {
 	return fv != nil && fv.MsgExists != nil && *(fv.MsgExists)
 }
@@ -597,7 +581,17 @@ func (p *plugin) validatorWithNonRepeatedConstraint(fv *validator.FieldValidator
 	// Need to use reflection in order to be future-proof for new types of constraints.
 	v := reflect.ValueOf(*fv)
 	for i := 0; i < v.NumField(); i++ {
-		if v.Type().Field(i).Name != "RepeatedCountMin" && v.Type().Field(i).Name != "RepeatedCountMax" && v.Field(i).Pointer() != 0 {
+		fieldName := v.Type().Field(i).Name
+
+		// All known validators will have a pointer type and we should skip any fields
+		// that are not pointers (i.e unknown fields, etc) as well as 'nil' pointers that
+		// don't lead to anything.
+		if v.Type().Field(i).Type.Kind() != reflect.Ptr || v.Field(i).IsNil() {
+			continue
+		}
+
+		// Identify non-repeated constraints based on their name.
+		if fieldName != "RepeatedCountMin" && fieldName != "RepeatedCountMax" {
 			return true
 		}
 	}
