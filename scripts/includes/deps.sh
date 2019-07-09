@@ -64,7 +64,6 @@ function setup_proto_deps() {
 
     go install github.com/gogo/protobuf/protoc-gen-gogo
     go install github.com/golang/protobuf/protoc-gen-go
-    go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
 
     PATH="${GOBIN:-"${HOME}/go/bin"}:${PATH}"
     export PATH

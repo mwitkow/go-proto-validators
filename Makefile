@@ -17,7 +17,7 @@ install:
 	@echo "--- Installing 'govalidators to GOPATH'"
 	go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
 
-regenerate_test_gogo: prepare_deps
+regenerate_test_gogo: prepare_deps install
 	@echo "--- Regenerating test .proto files with gogo imports"
 	export PATH=$(extra_path):$${PATH}; protoc  \
 		--proto_path=deps \
@@ -26,7 +26,7 @@ regenerate_test_gogo: prepare_deps
 		--gogo_out=test/gogo \
 		--govalidators_out=gogoimport=true:test/gogo test/*.proto
 
-regenerate_test_golang: prepare_deps
+regenerate_test_golang: prepare_deps install
 	@echo "--- Regenerating test .proto files with golang imports"
 	export PATH=$(extra_path):$${PATH}; protoc  \
 		--proto_path=deps \
@@ -35,7 +35,7 @@ regenerate_test_golang: prepare_deps
 		--go_out=test/golang \
 		--govalidators_out=test/golang test/*.proto
 
-regenerate_example: prepare_deps
+regenerate_example: prepare_deps install
 	@echo "--- Regenerating example directory"
 	export PATH=$(extra_path):$${PATH}; protoc  \
 		--proto_path=deps \
