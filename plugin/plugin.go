@@ -103,7 +103,6 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 		} else {
 			p.generateProto2Message(file, msg)
 		}
-
 	}
 }
 
@@ -396,7 +395,7 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	if fv.LengthGt != nil {
 		p.P(`if !( len(`, variableName, `) > `, fv.LengthGt, `) {`)
 		p.In()
-		errorStr := fmt.Sprintf(`length be greater than '%d'`, fv.GetLengthGt())
+		errorStr := fmt.Sprintf(`have a length greater than '%d'`, fv.GetLengthGt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
@@ -405,7 +404,7 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	if fv.LengthLt != nil {
 		p.P(`if !( len(`, variableName, `) < `, fv.LengthLt, `) {`)
 		p.In()
-		errorStr := fmt.Sprintf(`length be less than '%d'`, fv.GetLengthLt())
+		errorStr := fmt.Sprintf(`have a length smaller than '%d'`, fv.GetLengthLt())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
@@ -414,12 +413,11 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	if fv.LengthEq != nil {
 		p.P(`if !( len(`, variableName, `) == `, fv.LengthEq, `) {`)
 		p.In()
-		errorStr := fmt.Sprintf(`length be not equal '%d'`, fv.GetLengthEq())
+		errorStr := fmt.Sprintf(`have a length equal to '%d'`, fv.GetLengthEq())
 		p.generateErrorString(variableName, fieldName, errorStr, fv)
 		p.Out()
 		p.P(`}`)
 	}
-
 }
 
 func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
@@ -520,7 +518,6 @@ func (p *plugin) generateStringValidator(variableName string, ccTypeName string,
 		p.P(`}`)
 	}
 	p.generateLengthValidator(variableName, ccTypeName, fieldName, fv)
-
 }
 
 func (p *plugin) generateRepeatedCountValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
@@ -553,7 +550,6 @@ func (p *plugin) generateErrorString(variableName string, fieldName string, spec
 	} else {
 		p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", fv.GetHumanError(), "`))")
 	}
-
 }
 
 func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *generator.Descriptor, field *descriptor.FieldDescriptorProto) bool {
