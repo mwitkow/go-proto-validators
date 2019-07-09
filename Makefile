@@ -1,45 +1,62 @@
 # Copyright 2016 Michal Witkowski. All Rights Reserved.
 # See LICENSE for licensing terms.
 
-export PATH := ${GOPATH}/bin:${PATH}
+mkfile_dir = "$(dir $(abspath $(lastword $(MAKEFILE_LIST))))"
+
+ifdef GOBIN
+extra_path = "$(mkfile_dir)deps/bin:$(GOBIN)"
+else
+extra_path = "$(mkfile_dir)deps/bin:$(HOME)/go/bin"
+endif
+
+prepare_deps:
+	@echo "--- Preparing dependencies."
+	@bash scripts/prepare-deps.sh
 
 install:
-	@echo "--- Installing govalidators to GOPATH"
+	@echo "--- Installing 'govalidators to GOPATH'"
 	go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
 
-regenerate_test_gogo:
-	@echo "Regenerating test .proto files with gogo imports"
-	(protoc  \
-	--proto_path=${GOPATH}/src \
- 	--proto_path=test \
-	--gogo_out=test/gogo \
-	--govalidators_out=gogoimport=true:test/gogo test/*.proto)
+regenerate_test_gogo: prepare_deps install
+	@echo "--- Regenerating test .proto files with gogo imports"
+	export PATH=$(extra_path):$${PATH}; protoc  \
+		--proto_path=deps \
+		--proto_path=deps/include \
+		--proto_path=test \
+		--gogo_out=test/gogo \
+		--govalidators_out=gogoimport=true:test/gogo test/*.proto
 
-regenerate_test_golang:
+regenerate_test_golang: prepare_deps install
 	@echo "--- Regenerating test .proto files with golang imports"
-	(protoc  \
-	--proto_path=${GOPATH}/src \
- 	--proto_path=test \
-	--go_out=test/golang \
-	--govalidators_out=test/golang test/*.proto)
+	export PATH=$(extra_path):$${PATH}; protoc  \
+		--proto_path=deps \
+		--proto_path=deps/include \
+		--proto_path=test \
+		--go_out=test/golang \
+		--govalidators_out=test/golang test/*.proto
 
-regenerate_example: install
+regenerate_example: prepare_deps install
 	@echo "--- Regenerating example directory"
-	(protoc  \
-	--proto_path=${GOPATH}/src \
-	--proto_path=. \
-	--go_out=. \
-	--govalidators_out=. examples/*.proto)
+	export PATH=$(extra_path):$${PATH}; protoc  \
+		--proto_path=deps \
+		--proto_path=deps/include \
+		--proto_path=. \
+		--go_out=. \
+		--govalidators_out=. examples/*.proto
 
-test: install regenerate_test_gogo regenerate_test_golang
+test: regenerate_test_gogo regenerate_test_golang
 	@echo "Running tests"
 	go test -v ./...
 
-regenerate:
+regenerate: prepare_deps
 	@echo "--- Regenerating validator.proto"
-	(protoc \
-	--proto_path=${GOPATH}/src \
-	--proto_path=${GOPATH}/src/github.com/gogo/protobuf/protobuf \
-	--proto_path=. \
-	--gogo_out=Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:. \
-	validator.proto)
+	export PATH=$(extra_path):$${PATH}; protoc \
+		--proto_path=deps \
+		--proto_path=deps/include \
+		--proto_path=deps/github.com/gogo/protobuf/protobuf \
+		--proto_path=. \
+		--gogo_out=Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:. \
+		validator.proto
+
+clean:
+	rm -rf "deps"

@@ -62,7 +62,7 @@ func buildProto3(someString string, someInt uint32, identifier string, someValue
 		RepeatedBaseType: []int32{},
 	}
 
-	goodProto3.Repeated = make([]int32, repeatedCount, repeatedCount)
+	goodProto3.Repeated = make([]int32, repeatedCount)
 
 	return goodProto3
 }
@@ -122,7 +122,7 @@ func buildProto2(someString string, someInt uint32, identifier string, someValue
 		RepeatedBaseType: []int32{},
 	}
 
-	goodProto2.Repeated = make([]int32, repeatedCount, repeatedCount)
+	goodProto2.Repeated = make([]int32, repeatedCount)
 
 	return goodProto2
 }
@@ -493,5 +493,26 @@ func TestOneOf_Passes(t *testing.T) {
 		},
 	}
 	err := example.Validate()
+	assert.NoError(t, err, "This message should pass all validation")
+}
+
+func TestOneOf_Regex(t *testing.T) {
+	example := &OneOfMessage3{
+		SomeInt: 30,
+		Something: &OneOfMessage3_FiveRegex{
+			FiveRegex: "11", // fail
+		},
+	}
+	err := example.Validate()
+	assert.Error(t, err, "regex applied to oneof field should fail validation on FiveRegex")
+	assert.Contains(t, err.Error(), "FiveRegex", "error must err on the FiveRegex")
+
+	example = &OneOfMessage3{
+		SomeInt: 30,
+		Something: &OneOfMessage3_FiveRegex{
+			FiveRegex: "aaa", // pass
+		},
+	}
+	err = example.Validate()
 	assert.NoError(t, err, "This message should pass all validation")
 }
