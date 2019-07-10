@@ -28,6 +28,7 @@ func (this *InnerMessage) Validate() error {
 }
 
 var _regex_OuterMessage_ImportantString = regexp.MustCompile(`^[a-z]{2,5}$`)
+var _regex_OuterMessage_UserId = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[4][a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`)
 
 func (this *OuterMessage) Validate() error {
 	if !_regex_OuterMessage_ImportantString.MatchString(this.ImportantString) {
@@ -40,6 +41,9 @@ func (this *OuterMessage) Validate() error {
 		if err := github_com_mwitkow_go_proto_validators.CallValidatorIfExists(this.Inner); err != nil {
 			return github_com_mwitkow_go_proto_validators.FieldError("Inner", err)
 		}
+	}
+	if !_regex_OuterMessage_UserId.MatchString(this.UserId) {
+		return github_com_mwitkow_go_proto_validators.FieldError("UserId", fmt.Errorf(`value '%v' must be a string conforming to regex "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[4][a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$"`, this.UserId))
 	}
 	return nil
 }
