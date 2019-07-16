@@ -166,22 +166,17 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 			if validator.Regex != nil && validator.UuidVer != nil {
 				fmt.Fprintf(os.Stderr, "WARNING: regex and uuid validator is set for field %v.%v, only one of them can be set, regex validator will be ignored", ccTypeName, fieldName)
 			}
-
 			if validator.UuidVer != nil {
 				uuid, err := getUUIDRegex(validator.UuidVer)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "WARNING: field %v.%v error %s.\n", ccTypeName, fieldName, err)
 					continue
 				}
-
 				validator.Regex = &uuid
 			}
-
 			if validator.Regex != nil {
 				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", *validator.Regex, "`", `)`)
-				continue
 			}
-
 		}
 	}
 }
