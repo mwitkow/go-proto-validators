@@ -526,16 +526,13 @@ func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, 
 func getUUIDRegex(version *int32) (string, error) {
 	if version == nil {
 		return "", nil
-	}
-
-	if *version < 0 || *version > 5 {
+	} else if *version < 0 || *version > 5 {
 		return "", fmt.Errorf("UUID version should be between 0-5, Got %d", *version)
-	}
-
-	if *version == 0 {
+	} else if *version == 0 {
 		return fmt.Sprintf(uuidPattern, "1-5"), nil
+	} else {
+		return fmt.Sprintf(uuidPattern, strconv.Itoa(int(*version))), nil
 	}
-	return fmt.Sprintf(uuidPattern, strconv.Itoa(int(*version))), nil
 }
 
 func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
