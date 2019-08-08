@@ -69,4 +69,7 @@ message ValidatorMessage3 {
 	bytes SomeBytesLtReq = 39 [(validator.field) = {length_gt: 5}];
 	bytes SomeBytesGtReq = 40 [(validator.field) = {length_lt: 20}];
 	bytes SomeBytesEqReq = 41 [(validator.field) = {length_eq: 12}];
+
+	string UUIDAny = 42 [(validator.field) = {uuid_ver: 0}];
+	string UUID4NotEmpty = 43 [(validator.field) = {uuid_ver: 4, string_not_empty: true}];
 }

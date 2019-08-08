@@ -57,11 +57,17 @@ import (
 
 	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/proto"
-	descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
+	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/vanity"
 	validator "github.com/mwitkow/go-proto-validators"
 )
+
+const uuidPattern = "^([a-fA-F0-9]{8}-" +
+	"[a-fA-F0-9]{4}-" +
+	"[%s][a-fA-F0-9]{3}-" +
+	"[8|9|aA|bB][a-fA-F0-9]{3}-" +
+	"[a-fA-F0-9]{12})?$"
 
 type plugin struct {
 	*generator.Generator
@@ -154,9 +160,21 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	for _, field := range message.Field {
 		validator := getFieldValidatorIfAny(field)
-		if validator != nil && validator.Regex != nil {
+		if validator != nil {
 			fieldName := p.GetOneOfFieldName(message, field)
-			p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", *validator.Regex, "`", `)`)
+			if validator.Regex != nil && validator.UuidVer != nil {
+				fmt.Fprintf(os.Stderr, "WARNING: regex and uuid validator is set for field %v.%v, only one of them can be set. Regex and UUID validator is ignored for this field.", ccTypeName, fieldName)
+			} else if validator.UuidVer != nil {
+				uuid, err := getUUIDRegex(validator.UuidVer)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "WARNING: field %v.%v error %s.\n", ccTypeName, fieldName, err)
+				} else {
+					validator.Regex = &uuid
+					p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", *validator.Regex, "`", `)`)
+				}
+			} else if validator.Regex != nil {
+				p.P(`var `, p.regexName(ccTypeName, fieldName), ` = `, p.regexPkg.Use(), `.MustCompile(`, "`", *validator.Regex, "`", `)`)
+			}
 		}
 	}
 }
@@ -500,8 +518,32 @@ func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, 
 	}
 }
 
+// getUUIDRegex returns a regex to validate that a string is in UUID
+// format. The version parameter specified the UUID version. If version is 0,
+// the returned regex is valid for any UUID version
+func getUUIDRegex(version *int32) (string, error) {
+	if version == nil {
+		return "", nil
+	} else if *version < 0 || *version > 5 {
+		return "", fmt.Errorf("UUID version should be between 0-5, Got %d", *version)
+	} else if *version == 0 {
+		return fmt.Sprintf(uuidPattern, "1-5"), nil
+	} else {
+		return fmt.Sprintf(uuidPattern, strconv.Itoa(int(*version))), nil
+	}
+}
+
 func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
-	if fv.Regex != nil {
+	if fv.Regex != nil || fv.UuidVer != nil {
+		if fv.UuidVer != nil {
+			uuid, err := getUUIDRegex(fv.UuidVer)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "WARNING: field %v.%v error %s.\n", ccTypeName, fieldName, err)
+			} else {
+				fv.Regex = &uuid
+			}
+		}
+
 		p.P(`if !`, p.regexName(ccTypeName, fieldName), `.MatchString(`, variableName, `) {`)
 		p.In()
 		errorStr := "be a string conforming to regex " + strconv.Quote(fv.GetRegex())

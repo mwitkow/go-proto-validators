@@ -1,0 +1,8 @@
+syntax = "proto3";
+package validator.examples;
+import "github.com/mwitkow/go-proto-validators/validator.proto";
+
+message UUIDMsg {
+  // user_id must be a valid version 4 UUID.
+  string user_id = 1 [(validator.field) = {uuid_ver: 4, string_not_empty: true}];
+}

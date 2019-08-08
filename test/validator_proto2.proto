@@ -70,9 +70,11 @@ message ValidatorMessage {
 
 	optional string SomeStringLtReq = 36 [(validator.field) = {length_gt: 2}];
 	optional string SomeStringGtReq = 37 [(validator.field) = {length_lt: 12}];
-    optional string SomeStringEqReq = 38 [(validator.field) = {length_eq: 10}];
+	optional string SomeStringEqReq = 38 [(validator.field) = {length_eq: 10}];
 	optional bytes SomeBytesLtReq = 39 [(validator.field) = {length_gt: 5}];
 	optional bytes SomeBytesGtReq = 40 [(validator.field) = {length_lt: 20}];
 	optional bytes SomeBytesEqReq = 41 [(validator.field) = {length_eq: 12}];
 
+	optional string UUIDAny = 42 [(validator.field) = {uuid_ver: 0}];
+	required string UUID4NotEmpty = 43 [(validator.field) = {uuid_ver: 4, string_not_empty: true}];
 }
