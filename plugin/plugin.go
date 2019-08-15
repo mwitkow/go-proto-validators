@@ -401,9 +401,9 @@ func (p *plugin) generateEnumValidator(
 	fv *validator.FieldValidator) {
 	if fv.GetIsInEnum() {
 		enum := p.ObjectNamed(field.GetTypeName()).(*generator.EnumDescriptor)
-		p.P(`if _, ok := `, enum.GetName(), "_name[int32(", variableName, ")]; !ok {")
+		p.P(`if _, ok := `, strings.Join(enum.TypeName(), "_"), "_name[int32(", variableName, ")]; !ok {")
 		p.In()
-		p.generateErrorString(variableName, fieldName, fmt.Sprintf("be a valid %s field", enum.GetName()), fv)
+		p.generateErrorString(variableName, fieldName, fmt.Sprintf("be a valid %s field", strings.Join(enum.TypeName(), "_")), fv)
 		p.Out()
 		p.P(`}`)
 	}
