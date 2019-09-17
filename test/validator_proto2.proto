@@ -7,11 +7,23 @@ package validatortest;
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/mwitkow/go-proto-validators/validator.proto";
 
+// Top-level enum type definition.
+enum EnumProto2 {
+	alpha2 = 0;
+	beta2 = 1;
+}
+
 message ValidatorMessage {
 	// Embedded message test structure.
-	message Embedded {
+	message EmbeddedMessage {
 		optional string Identifier = 1 [(validator.field) = {regex: "^[a-z]{2,5}$"}];
 		required int64 SomeValue = 2 [(validator.field) = {int_gt: 0, int_lt: 100}];
+	}
+
+	// Embedded enum type definition.
+	enum EmbeddedEnum {
+		zero = 0;
+		one = 1;
 	}
 
 	// String regex constraint tests.
@@ -28,10 +40,10 @@ message ValidatorMessage {
 	repeated uint32 IntRepNonNull = 9 [(validator.field) = {int_gt: 0}];
 
 	// Embedded message recursive constraint tests.
-	required Embedded embeddedReq = 10;
-	required Embedded embeddedNonNull = 11 [(gogoproto.nullable) = false];
-	repeated Embedded embeddedRep = 12;
-	repeated Embedded embeddedRepNonNullable = 13 [(gogoproto.nullable) = false];
+	required EmbeddedMessage embeddedReq = 10;
+	required EmbeddedMessage embeddedNonNull = 11 [(gogoproto.nullable) = false];
+	repeated EmbeddedMessage embeddedRep = 12;
+	repeated EmbeddedMessage embeddedRepNonNullable = 13 [(gogoproto.nullable) = false];
 
 	// Custom error tests.
 	optional int32 CustomErrorInt = 16 [(validator.field) = {int_gt: 10, human_error: "My Custom Error"}];
@@ -77,4 +89,8 @@ message ValidatorMessage {
 
 	optional string UUIDAny = 42 [(validator.field) = {uuid_ver: 0}];
 	required string UUID4NotEmpty = 43 [(validator.field) = {uuid_ver: 4, string_not_empty: true}];
+
+	// Enum tests.
+	required EnumProto2 someEnum = 44 [(validator.field) = {is_in_enum: true}];
+	required EmbeddedEnum someEmbeddedEnum = 45 [(validator.field) = {is_in_enum: true}];
 }
