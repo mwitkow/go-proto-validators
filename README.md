@@ -12,9 +12,9 @@ deeply-nested messages.
 Using Protobuf validators is currently verified to work with:
 
 - Go 1.11 & 1.12
-- [Protobuf](https://github.com/protocolbuffers/protobuf) @ `v3.0.2`
-- [Go Protobuf](https://github.com/golang/protobuf) @ `v1.3.1`
-- [Gogo Protobuf](https://github.com/gogo/protobuf) @ `v1.2.1`
+- [Protobuf](https://github.com/protocolbuffers/protobuf) @ `v3.8.0`
+- [Go Protobuf](https://github.com/golang/protobuf) @ `v1.3.2`
+- [Gogo Protobuf](https://github.com/gogo/protobuf) @ `v1.3.0`
 
 It _should_ still be possible to use it in project using earlier Go versions. However if you want to contribute to this
 repository you'll need at least 1.11 for Go module support.
