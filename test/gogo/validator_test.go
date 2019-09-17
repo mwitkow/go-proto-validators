@@ -571,22 +571,18 @@ func TestUUID4Validation(t *testing.T) {
 			uuid: uuid1,
 			fail: true,
 		},
-
 		{
 			uuid: uuid4,
 			fail: false,
 		},
-
 		{
 			uuid: "",
 			fail: true,
 		},
-
 		{
 			uuid: "66bb25e2-2e0d",
 			fail: true,
 		},
-
 		{
 			uuid: "1234abcd",
 			fail: true,
@@ -613,6 +609,5 @@ func TestUUID4Validation(t *testing.T) {
 				t.Errorf("Expected validation failure: %t, but got %t, err: %v", tc.fail, failed, err)
 			}
 		})
-
 	}
 }
