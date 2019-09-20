@@ -64,7 +64,7 @@ message FieldValidator {
   optional int64 length_gt = 14;
   // Field value of length smaller than this value.
   optional int64 length_lt = 15;
-  // Field value of integer strictly equal this value.
+  // Field value of length strictly equal this value.
   optional int64 length_eq = 16;
   // Requires that the value is in the enum.
   optional bool is_in_enum = 17;
