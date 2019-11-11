@@ -11,7 +11,7 @@ deeply-nested messages.
 
 Using Protobuf validators is currently verified to work with:
 
-- Go 1.11 & 1.12
+- Go 1.11, 1.12, 1.13
 - [Protobuf](https://github.com/protocolbuffers/protobuf) @ `v3.8.0`
 - [Go Protobuf](https://github.com/golang/protobuf) @ `v1.3.2`
 - [Gogo Protobuf](https://github.com/gogo/protobuf) @ `v1.3.0`
