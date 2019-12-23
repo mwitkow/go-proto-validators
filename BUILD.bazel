@@ -1,0 +1,26 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
+proto_library(
+    name = "validator_proto",
+    srcs = ["validator.proto"],
+    import_prefix = "github.com/mwitkow/go-proto-validators",
+    deps = [
+        "@com_google_protobuf//:descriptor_proto",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "helper.go",
+        "validator.pb.go",
+    ],
+    importpath = "github.com/mwitkow/go-proto-validators",
+    deps = [
+        "@com_github_gogo_protobuf//proto:go_default_library",
+        "@com_github_gogo_protobuf//protoc-gen-gogo/descriptor:go_default_library",
+    ],
+    visibility = ["//visibility:public"],
+)
