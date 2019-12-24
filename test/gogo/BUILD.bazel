@@ -1,0 +1,28 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_test")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+
+go_proto_library(
+    name = "gogo_proto",
+    importpath = "dummy",
+    protos = [
+        "//test:proto2",
+        "//test:proto3",
+        "//test:proto3_oneof",
+        "//test:proto3_map",
+    ],
+    compilers = [
+        "//:gogo_proto_validators",
+        "@io_bazel_rules_go//proto:gogo_proto",
+    ],
+    visibility = [":__pkg__"]
+)
+
+go_test(
+    name = "go_default_test",
+    importpath = "dummy",
+    srcs = ["validator_test.go"],
+    embed = [":gogo_proto"],
+    deps = [
+        "@com_github_stretchr_testify//assert:go_default_library",
+    ],
+)

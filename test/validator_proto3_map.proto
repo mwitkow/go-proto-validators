@@ -4,9 +4,6 @@
 syntax = "proto3";
 package validatortest;
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-import "github.com/mwitkow/go-proto-validators/validator.proto";
-
 message ValueType {
   string something  = 1 ;
 }
