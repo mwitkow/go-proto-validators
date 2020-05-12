@@ -29,7 +29,7 @@ package validator.examples;
 import "github.com/mwitkow/go-proto-validators/validator.proto";
 
 message InnerMessage {
-  // some_integer can only be in range (1, 100).
+  // some_integer can only be in range (0, 100).
   int32 some_integer = 1 [(validator.field) = {int_gt: 0, int_lt: 100}];
   // some_float can only be in range (0;1).
   double some_float = 2 [(validator.field) = {float_gte: 0, float_lte: 1}];
