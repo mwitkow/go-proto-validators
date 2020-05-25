@@ -37,7 +37,7 @@ message InnerMessage {
 
 message OuterMessage {
   // important_string must be a lowercase alpha-numeric of 5 to 30 characters (RE2 syntax).
-  string important_string = 1 [(validator.field) = {regex: "^[a-z]{2,5}$"}];
+  string important_string = 1 [(validator.field) = {regex: "^[a-z0-9]{5,30}$"}];
   // proto3 doesn't have `required`, the `msg_exist` enforces presence of InnerMessage.
   InnerMessage inner = 2 [(validator.field) = {msg_exists : true}];
 }
@@ -66,11 +66,11 @@ func (this *InnerMessage) Validate() error {
 	return nil
 }
 
-var _regex_OuterMessage_ImportantString = regexp.MustCompile("^[a-z]{2,5}$")
+var _regex_OuterMessage_ImportantString = regexp.MustCompile("^[a-z0-9]{5,30}$")
 
 func (this *OuterMessage) Validate() error {
 	if !_regex_OuterMessage_ImportantString.MatchString(this.ImportantString) {
-		return fmt.Errorf("validation error: OuterMessage.ImportantString must conform to regex '^[a-z]{2,5}$'")
+		return fmt.Errorf("validation error: OuterMessage.ImportantString must conform to regex '^[a-z0-9]{5,30}$'")
 	}
 	if nil == this.Inner {
 		return fmt.Errorf("validation error: OuterMessage.Inner message must exist")
