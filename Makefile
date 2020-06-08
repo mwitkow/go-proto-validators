@@ -13,8 +13,12 @@ prepare_deps:
 	@echo "--- Preparing dependencies."
 	@bash scripts/prepare-deps.sh
 
+gazelle:
+	@bash bazel run --run_under="cd ${mkfile_dir} && " @bazel_gazelle//cmd/gazelle -- update-repos -from_file=go.mod -to_macro=go_deps.bzl%go_repositories
+	@bash bazel run //:gazelle -- --mode=fix --exclude=deps --exclude=examples --exclude=test
+
 install:
-	@echo "--- Installing 'govalidators to GOPATH'"
+	@echo "--- Installing 'govalidators' binary to GOBIN."
 	go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
 
 regenerate_test_gogo: prepare_deps install

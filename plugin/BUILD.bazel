@@ -2,8 +2,9 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "go_default_library",
-    importpath = "github.com/mwitkow/go-proto-validators/plugin",
     srcs = ["plugin.go"],
+    importpath = "github.com/mwitkow/go-proto-validators/plugin",
+    visibility = ["//visibility:public"],
     deps = [
         "//:validators_gogo",
         "@com_github_gogo_protobuf//gogoproto:go_default_library",
@@ -12,5 +13,4 @@ go_library(
         "@com_github_gogo_protobuf//protoc-gen-gogo/generator:go_default_library",
         "@com_github_gogo_protobuf//vanity:go_default_library",
     ],
-    visibility = ["//visibility:public"],
 )
