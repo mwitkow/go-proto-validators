@@ -1,23 +1,18 @@
+load("@bazel_gazelle//:def.bzl", "gazelle")
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 load("@io_bazel_rules_go//proto:compiler.bzl", "go_proto_compiler")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
-filegroup(
-    name = "validators",
-    srcs = ["validator.proto"],
-    visibility = ["//visibility:public"],
+gazelle(
+    name = "gazelle",
 )
 
-proto_library(
-    name = "validators_proto",
-    srcs = [":validators"],
-    import_prefix = "github.com/mwitkow/go-proto-validators",
-    deps = [
-        "@com_google_protobuf//:descriptor_proto",
-    ],
-    visibility = ["//visibility:public"],
-)
+# gazelle:prefix github.com/mwitkow/go-proto-validators
+# gazelle:build_file_name BUILD.bazel
+
+# By default resolve the top-level package to the gogo variant as it's required for the plugin compilation.
+# gazelle:resolve go github.com/mwitkow/go-proto-validators //:validators_gogo
 
 go_proto_compiler(
     name = "go_proto_validators",
@@ -48,7 +43,7 @@ go_proto_compiler(
 go_proto_library(
     name = "_validators_gogo",
     importpath = "github.com/mwitkow/go-proto-validators",
-    proto = ":validators_proto",
+    proto = ":validator_proto",
     compilers = [
         "@io_bazel_rules_go//proto:gogo_proto",
     ],
@@ -61,7 +56,7 @@ go_proto_library(
 go_proto_library(
     name = "_validators_golang",
     importpath = "github.com/mwitkow/go-proto-validators",
-    proto = ":validators_proto",
+    proto = ":validator_proto",
     compilers = [
         "@io_bazel_rules_go//proto:go_proto",
     ],
@@ -73,16 +68,24 @@ go_proto_library(
 
 go_library(
     name = "validators_gogo",
-    importpath = "github.com/mwitkow/go-proto-validators",
     srcs = ["helper.go"],
     embed = [":_validators_gogo"],
+    importpath = "github.com/mwitkow/go-proto-validators",
     visibility = ["//visibility:public"],
 )
 
 go_library(
     name = "validators_golang",
-    importpath = "github.com/mwitkow/go-proto-validators",
     srcs = ["helper.go"],
     embed = [":_validators_golang"],
+    importpath = "github.com/mwitkow/go-proto-validators",
     visibility = ["//visibility:public"],
+)
+
+proto_library(
+    name = "validator_proto",
+    srcs = ["validator.proto"],
+    import_prefix = "github.com/mwitkow/go-proto-validators",
+    visibility = ["//visibility:public"],
+    deps = ["@com_google_protobuf//:descriptor_proto"],
 )

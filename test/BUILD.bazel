@@ -4,7 +4,7 @@ proto_library(
     name = "proto2",
     srcs = ["validator_proto2.proto"],
     deps = [
-        "//:validators_proto",
+        "//:validator_proto",
         "@gogo_special_proto//github.com/gogo/protobuf/gogoproto",
     ],
     visibility = ["//test:__subpackages__"],
@@ -14,7 +14,7 @@ proto_library(
     name = "proto3",
     srcs = ["validator_proto3.proto"],
     deps = [
-        "//:validators_proto",
+        "//:validator_proto",
         "@gogo_special_proto//github.com/gogo/protobuf/gogoproto",
     ],
     visibility = ["//test:__subpackages__"],
@@ -24,7 +24,7 @@ proto_library(
     name = "proto3_oneof",
     srcs = ["validator_proto3_oneof.proto"],
     deps = [
-        "//:validators_proto",
+        "//:validator_proto",
     ],
     visibility = ["//test:__subpackages__"],
 )

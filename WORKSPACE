@@ -2,7 +2,18 @@ workspace(name = "com_github_mwitkow_go_proto_validators")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-GO_VERSION = "1.13.5"
+GO_VERSION = "1.13.14"
+
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "64ad2728ccdd2044216e4cec7815918b7bb3bb28c95b7e9d951f9d4eccb07625",
+    strip_prefix = "bazel-skylib-1.0.2",
+    url = "https://github.com/bazelbuild/bazel-skylib/archive/1.0.2.zip",
+)
+
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+
+bazel_skylib_workspace()
 
 http_archive(
     name = "rules_proto",
@@ -15,9 +26,9 @@ http_archive(
 
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "678d91d8a939a1ef9cb268e1f20c14cd55e40361dc397bb5881e4e1e532679b1",
-    strip_prefix = "protobuf-3.10.1",
-    url = "https://github.com/protocolbuffers/protobuf/archive/v3.10.1.zip",
+    sha256 = "e4f8bedb19a93d0dccc359a126f51158282e0b24d92e0cad9c76a9699698268d",
+    strip_prefix = "protobuf-3.11.2",
+    url = "https://github.com/protocolbuffers/protobuf/archive/v3.11.2.zip",
 )
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
@@ -26,12 +37,13 @@ protobuf_deps()
 
 http_archive(
     name = "io_bazel_rules_go",
-    sha256 = "d5de13e9a994527b6dc41f39ad9ceee3214974dacb18f73a5fa2a4458ae6d3c9",
-    strip_prefix = "rules_go-0.20.3",
-    url = "https://github.com/bazelbuild/rules_go/archive/v0.20.3.tar.gz",
+    sha256 = "8663604808d2738dc615a2c3eb70eba54a9a982089dd09f6ffe5d0e75771bc4f",
+    urls = [
+        "https://github.com/bazelbuild/rules_go/releases/download/v0.23.6/rules_go-v0.23.6.tar.gz",
+    ],
 )
 
-load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies", "go_register_toolchains")
+load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
 
 go_rules_dependencies()
 
@@ -39,10 +51,10 @@ go_register_toolchains(go_version = GO_VERSION)
 
 http_archive(
     name = "bazel_gazelle",
-    sha256 = "d987004a72697334a095bbaa18d615804a28280201a50ed6c234c40ccc41e493",
-    strip_prefix = "bazel-gazelle-0.19.1",
+    sha256 = "2423201f91471ea87925b81962258e27a22cd8ebb4fe355bf033dcf2ad668541",
+    strip_prefix = "bazel-gazelle-0.21.1",
     urls = [
-        "https://github.com/bazelbuild/bazel-gazelle/archive/v0.19.1.tar.gz",
+        "https://github.com/bazelbuild/bazel-gazelle/archive/v0.21.1.tar.gz",
     ],
 )
 
@@ -50,65 +62,8 @@ load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
 
 gazelle_dependencies()
 
-go_repository(
-    name = "com_github_gogo_protobuf",
-    importpath = "github.com/gogo/protobuf",
-    sum = "h1:G8O7TerXerS4F6sx9OV7/nRfJdnXgHZu/S/7F2SN+UE=",
-    version = "v1.3.0",
-)
+load("go_deps.bzl", "go_repositories")
 
-go_repository(
-    name = "com_github_davecgh_go_spew",
-    importpath = "github.com/davecgh/go-spew",
-    sum = "h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=",
-    version = "v1.1.0",
-)
+go_repositories()
 
-go_repository(
-    name = "com_github_golang_protobuf",
-    importpath = "github.com/golang/protobuf",
-    sum = "h1:6nsPYzhq5kReh6QImI3k5qWzO4PEbvbIW2cwSfR/6xs=",
-    version = "v1.3.2",
-)
-
-go_repository(
-    name = "com_github_kisielk_errcheck",
-    importpath = "github.com/kisielk/errcheck",
-    sum = "h1:reN85Pxc5larApoH1keMBiu2GWtPqXQ1nc9gx+jOU+E=",
-    version = "v1.2.0",
-)
-
-go_repository(
-    name = "com_github_kisielk_gotool",
-    importpath = "github.com/kisielk/gotool",
-    sum = "h1:AV2c/EiW3KqPNT9ZKl07ehoAGi4C5/01Cfbblndcapg=",
-    version = "v1.0.0",
-)
-
-go_repository(
-    name = "com_github_pmezard_go_difflib",
-    importpath = "github.com/pmezard/go-difflib",
-    sum = "h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=",
-    version = "v1.0.0",
-)
-
-go_repository(
-    name = "com_github_stretchr_objx",
-    importpath = "github.com/stretchr/objx",
-    sum = "h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=",
-    version = "v0.1.0",
-)
-
-go_repository(
-    name = "com_github_stretchr_testify",
-    importpath = "github.com/stretchr/testify",
-    sum = "h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0Q=",
-    version = "v1.3.0",
-)
-
-go_repository(
-    name = "org_golang_x_tools",
-    importpath = "golang.org/x/tools",
-    sum = "h1:NIou6eNFigscvKJmsbyez16S2cIS6idossORlFtSt2E=",
-    version = "v0.0.0-20181030221726-6c7e314b6563",
-)
+# gazelle:repository_macro go_deps.bzl%go_repositories
