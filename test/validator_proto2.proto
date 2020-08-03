@@ -93,4 +93,7 @@ message ValidatorMessage {
 	// Enum tests.
 	required EnumProto2 someEnum = 44 [(validator.field) = {is_in_enum: true}];
 	required EmbeddedEnum someEmbeddedEnum = 45 [(validator.field) = {is_in_enum: true}];
+
+	// gogo embedded tests.
+	required EmbeddedMessage someGogoEmbedded = 46 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
 }

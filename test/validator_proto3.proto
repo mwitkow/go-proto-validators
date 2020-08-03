@@ -88,4 +88,6 @@ message ValidatorMessage3 {
 	// Enum tests.
 	EnumProto3 someEnum = 44 [(validator.field) = {is_in_enum: true}];
 	EmbeddedEnum someEmbeddedEnum = 45 [(validator.field) = {is_in_enum: true}];
+
+	EmbeddedMessage someGogoEmbedded = 46 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
 }

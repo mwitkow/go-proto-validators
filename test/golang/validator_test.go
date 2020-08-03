@@ -76,6 +76,8 @@ func buildProto3(someString string, someInt uint32, identifier string, someValue
 
 		SomeEnum:         EnumProto3(someEnum),
 		SomeEmbeddedEnum: ValidatorMessage3_EmbeddedEnum(someEmbeddedEnum),
+
+		SomeGogoEmbedded: goodEmbeddedProto3,
 	}
 
 	goodProto3.Repeated = make([]int32, repeatedCount)
