@@ -16,53 +16,45 @@ gazelle(
 
 go_proto_compiler(
     name = "go_proto_validators",
-    plugin = "//protoc-gen-govalidators",
     options = ["gogoimport=false"],
+    plugin = "//protoc-gen-govalidators",
     suffix = ".validator.pb.go",
     valid_archive = False,
+    visibility = ["//visibility:public"],
     deps = [
         ":validators_golang",
-        "@com_github_golang_protobuf//protoc-gen-go/descriptor:go_default_library",
     ],
-    visibility = ["//visibility:public"],
 )
 
 go_proto_compiler(
     name = "gogo_proto_validators",
-    plugin = "//protoc-gen-govalidators",
     options = ["gogoimport=true"],
+    plugin = "//protoc-gen-govalidators",
     suffix = ".validator.pb.go",
     valid_archive = False,
+    visibility = ["//visibility:public"],
     deps = [
         ":validators_gogo",
-        "@com_github_gogo_protobuf//protoc-gen-gogo/descriptor:go_default_library",
     ],
-    visibility = ["//visibility:public"],
 )
 
 go_proto_library(
     name = "_validators_gogo",
-    importpath = "github.com/mwitkow/go-proto-validators",
-    proto = ":validator_proto",
     compilers = [
         "@io_bazel_rules_go//proto:gogo_proto",
     ],
-    deps = [
-        "@com_github_gogo_protobuf//protoc-gen-gogo/descriptor:go_default_library",
-    ],
+    importpath = "github.com/mwitkow/go-proto-validators",
+    proto = ":validator_proto",
     visibility = ["//:__pkg__"],
 )
 
 go_proto_library(
     name = "_validators_golang",
-    importpath = "github.com/mwitkow/go-proto-validators",
-    proto = ":validator_proto",
     compilers = [
         "@io_bazel_rules_go//proto:go_proto",
     ],
-    deps = [
-        "@com_github_golang_protobuf//protoc-gen-go/descriptor:go_default_library",
-    ],
+    importpath = "github.com/mwitkow/go-proto-validators",
+    proto = ":validator_proto",
     visibility = ["//:__pkg__"],
 )
 
