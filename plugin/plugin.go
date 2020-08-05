@@ -60,6 +60,7 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/vanity"
+
 	validator "github.com/mwitkow/go-proto-validators"
 )
 
@@ -179,6 +180,28 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 	}
 }
 
+func (p *plugin) GetFieldName(message *generator.Descriptor, field *descriptor.FieldDescriptorProto) string {
+	fieldName := p.Generator.GetFieldName(message, field)
+	if p.useGogoImport {
+		return fieldName
+	}
+	if gogoproto.IsEmbed(field) {
+		fieldName = generator.CamelCase(*field.Name)
+	}
+	return fieldName
+}
+
+func (p *plugin) GetOneOfFieldName(message *generator.Descriptor, field *descriptor.FieldDescriptorProto) string {
+	fieldName := p.Generator.GetOneOfFieldName(message, field)
+	if p.useGogoImport {
+		return fieldName
+	}
+	if gogoproto.IsEmbed(field) {
+		fieldName = generator.CamelCase(*field.Name)
+	}
+	return fieldName
+}
+
 func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 
@@ -195,7 +218,7 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 		}
 		variableName := "this." + fieldName
 		repeated := field.IsRepeated()
-		nullable := gogoproto.IsNullable(field)
+		nullable := gogoproto.IsNullable(field) && !(p.useGogoImport && gogoproto.IsEmbed(field))
 		// For proto2 syntax, only Gogo generates non-pointer fields
 		nonpointer := gogoproto.ImportsGoGoProto(file.FileDescriptorProto) && !gogoproto.IsNullable(field)
 		if repeated {
@@ -291,7 +314,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		variableName := "this." + fieldName
 		repeated := field.IsRepeated()
 		// Golang's proto3 has no concept of unset primitive fields
-		nullable := (gogoproto.IsNullable(field) || !gogoproto.ImportsGoGoProto(file.FileDescriptorProto)) && field.IsMessage()
+		nullable := (gogoproto.IsNullable(field) || !gogoproto.ImportsGoGoProto(file.FileDescriptorProto)) && field.IsMessage() && !(p.useGogoImport && gogoproto.IsEmbed(field))
 		if p.fieldIsProto3Map(file, message, field) {
 			p.P(`// Validation of proto3 map<> fields is unsupported.`)
 			continue
@@ -300,7 +323,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			p.In()
 			oneOfName := p.GetFieldName(message, field)
 			oneOfType := p.OneOfTypeName(message, field)
-			//if x, ok := m.GetType().(*OneOfMessage3_OneInt); ok {
+			// if x, ok := m.GetType().(*OneOfMessage3_OneInt); ok {
 			p.P(`if oneOfNester, ok := this.Get` + oneOfName + `().(* ` + oneOfType + `); ok {`)
 			variableName = "oneOfNester." + p.GetOneOfFieldName(message, field)
 		}
