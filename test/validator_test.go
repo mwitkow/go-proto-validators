@@ -4,11 +4,10 @@
 package validatortest
 
 import (
-	fmt "fmt"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -36,15 +35,12 @@ func buildProto3(someString string, someInt uint32, identifier string, someValue
 		SomeStringNoQuotes:  someString,
 		SomeStringUnescaped: someString,
 
-		SomeInt:           someInt,
-		SomeIntRep:        []uint32{someInt, 12, 13, 14, 15, 16},
-		SomeIntRepNonNull: []uint32{someInt, 102},
+		SomeInt:    someInt,
+		SomeIntRep: []uint32{someInt, 12, 13, 14, 15, 16},
 
-		SomeEmbedded:               nil,
-		SomeEmbeddedNonNullable:    goodEmbeddedProto3,
-		SomeEmbeddedExists:         goodEmbeddedProto3,
-		SomeEmbeddedRep:            []*ValidatorMessage3_EmbeddedMessage{goodEmbeddedProto3},
-		SomeEmbeddedRepNonNullable: []*ValidatorMessage3_EmbeddedMessage{goodEmbeddedProto3},
+		SomeEmbedded:       nil,
+		SomeEmbeddedExists: goodEmbeddedProto3,
+		SomeEmbeddedRep:    []*ValidatorMessage3_EmbeddedMessage{goodEmbeddedProto3},
 
 		StrictSomeDouble:           someDoubleStrict,
 		StrictSomeDoubleRep:        []float64{someDoubleStrict, 0.5, 0.55, 0.6},
@@ -53,12 +49,10 @@ func buildProto3(someString string, someInt uint32, identifier string, someValue
 		StrictSomeFloatRep:         []float32{someFloatStrict, 0.5, 0.55, 0.6},
 		StrictSomeFloatRepNonNull:  []float32{someFloatStrict, 0.5, 0.55, 0.6},
 
-		SomeDouble:           someDouble,
-		SomeDoubleRep:        []float64{someDouble, 0.5, 0.55, 0.6},
-		SomeDoubleRepNonNull: []float64{someDouble, 0.5, 0.55, 0.6},
-		SomeFloat:            someFloat,
-		SomeFloatRep:         []float32{someFloat, 0.5, 0.55, 0.6},
-		SomeFloatRepNonNull:  []float32{someFloat, 0.5, 0.55, 0.6},
+		SomeDouble:    someDouble,
+		SomeDoubleRep: []float64{someDouble, 0.5, 0.55, 0.6},
+		SomeFloat:     someFloat,
+		SomeFloatRep:  []float32{someFloat, 0.5, 0.55, 0.6},
 
 		SomeNonEmptyString: nonEmptyString,
 		SomeStringEqReq:    someStringLength,
@@ -76,8 +70,6 @@ func buildProto3(someString string, someInt uint32, identifier string, someValue
 
 		SomeEnum:         EnumProto3(someEnum),
 		SomeEmbeddedEnum: ValidatorMessage3_EmbeddedEnum(someEmbeddedEnum),
-
-		SomeGogoEmbedded: goodEmbeddedProto3,
 	}
 
 	goodProto3.Repeated = make([]int32, repeatedCount)
@@ -97,41 +89,26 @@ func buildProto2(someString string, someInt uint32, identifier string,
 	}
 
 	goodProto2 := &ValidatorMessage{
-		StringReq:        &someString,
-		StringReqNonNull: &someString,
-
-		StringOpt:        nil,
-		StringOptNonNull: &someString,
-
+		StringReq:       &someString,
+		StringOpt:       nil,
+		StringNoQuotes:  &someString,
 		StringUnescaped: &someString,
 
-		IntReq:        &someInt,
-		IntReqNonNull: &someInt,
-		IntRep:        []uint32{someInt, 12, 13, 14, 15, 16},
-		IntRepNonNull: []uint32{someInt, 12, 13, 14, 15, 16},
+		IntReq: &someInt,
+		IntRep: []uint32{someInt, 12, 13, 14, 15, 16},
 
-		EmbeddedReq:            goodEmbeddedProto2,
-		EmbeddedNonNull:        goodEmbeddedProto2,
-		EmbeddedRep:            []*ValidatorMessage_EmbeddedMessage{goodEmbeddedProto2},
-		EmbeddedRepNonNullable: []*ValidatorMessage_EmbeddedMessage{goodEmbeddedProto2},
+		EmbeddedReq: goodEmbeddedProto2,
+		EmbeddedRep: []*ValidatorMessage_EmbeddedMessage{goodEmbeddedProto2},
 
-		StrictSomeDoubleReq:        &someDoubleStrict,
-		StrictSomeDoubleReqNonNull: &someDoubleStrict,
-		StrictSomeDoubleRep:        []float64{someDoubleStrict, 0.5, 0.55, 0.6},
-		StrictSomeDoubleRepNonNull: []float64{someDoubleStrict, 0.5, 0.55, 0.6},
-		StrictSomeFloatReq:         &someFloatStrict,
-		StrictSomeFloatReqNonNull:  &someFloatStrict,
-		StrictSomeFloatRep:         []float32{someFloatStrict, 0.5, 0.55, 0.6},
-		StrictSomeFloatRepNonNull:  []float32{someFloatStrict, 0.5, 0.55, 0.6},
+		StrictSomeDoubleReq: &someDoubleStrict,
+		StrictSomeDoubleRep: []float64{someDoubleStrict, 0.5, 0.55, 0.6},
+		StrictSomeFloatReq:  &someFloatStrict,
+		StrictSomeFloatRep:  []float32{someFloatStrict, 0.5, 0.55, 0.6},
 
-		SomeDoubleReq:        &someDouble,
-		SomeDoubleReqNonNull: &someDouble,
-		SomeDoubleRep:        []float64{someDouble, 0.5, 0.55, 0.6},
-		SomeDoubleRepNonNull: []float64{someDouble, 0.5, 0.55, 0.6},
-		SomeFloatReq:         &someFloat,
-		SomeFloatReqNonNull:  &someFloat,
-		SomeFloatRep:         []float32{someFloat, 0.5, 0.55, 0.6},
-		SomeFloatRepNonNull:  []float32{someFloat, 0.5, 0.55, 0.6},
+		SomeDoubleReq: &someDouble,
+		SomeDoubleRep: []float64{someDouble, 0.5, 0.55, 0.6},
+		SomeFloatReq:  &someFloat,
+		SomeFloatRep:  []float32{someFloat, 0.5, 0.55, 0.6},
 
 		SomeNonEmptyString: &nonEmptyString,
 		SomeStringEqReq:    &someStringLength,
@@ -155,355 +132,308 @@ func buildProto2(someString string, someInt uint32, identifier string,
 }
 
 func TestGoodProto3(t *testing.T) {
-	var err error
 	goodProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 1, 1)
-	err = goodProto3.Validate()
-	if err != nil {
-		t.Fatalf("unexpected fail in validator: %v", err)
-	}
+	assert.NoError(t, goodProto3.Validate())
 }
 
 func TestGoodProto2(t *testing.T) {
-	var err error
 	goodProto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 1, 1)
-
-	err = goodProto2.Validate()
-	if err != nil {
-		t.Fatalf("unexpected fail in validator: %v", err)
-	}
+	assert.NoError(t, goodProto2.Validate())
 }
 
 func TestStringRegex(t *testing.T) {
-	tooLong1Proto3 := buildProto3("toolong", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if tooLong1Proto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
-	tooLong1Proto2 := buildProto2("toolong", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if tooLong1Proto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
-	tooLong2Proto3 := buildProto3("-%ab", 11, "bad#", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if tooLong2Proto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
-	tooLong2Proto2 := buildProto2("-%ab", 11, "bad#", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if tooLong2Proto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	tooLongProto3 := buildProto3("toolong", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
+	assert.Error(t, tooLongProto3.Validate())
+
+	tooLongProto2 := buildProto2("toolong", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
+	assert.Error(t, tooLongProto2.Validate())
+
+	mismatchProto3 := buildProto3("-%ab", 11, "bad#", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
+	assert.Error(t, mismatchProto3.Validate())
+
+	mismatchProto2 := buildProto2("-%ab", 11, "bad#", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
+	assert.Error(t, mismatchProto2.Validate())
 }
 
 func TestIntLowerBounds(t *testing.T) {
 	lowerThan10Proto3 := buildProto3("-%ab", 9, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if lowerThan10Proto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, lowerThan10Proto3.Validate())
+
 	lowerThan10Proto2 := buildProto2("-%ab", 9, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if lowerThan10Proto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, lowerThan10Proto2.Validate())
+
 	lowerThan0Proto3 := buildProto3("-%ab", 11, "abba", -1, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if lowerThan0Proto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, lowerThan0Proto3.Validate())
+
 	lowerThan0Proto2 := buildProto2("-%ab", 11, "abba", -1, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if lowerThan0Proto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, lowerThan0Proto2.Validate())
 }
 
 func TestIntUpperBounds(t *testing.T) {
 	greaterThan100Proto3 := buildProto3("-%ab", 11, "abba", 101, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if greaterThan100Proto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, greaterThan100Proto3.Validate())
+
 	greaterThan100Proto2 := buildProto2("-%ab", 11, "abba", 101, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if greaterThan100Proto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, greaterThan100Proto2.Validate())
 }
 
 func TestDoubleStrictLowerBounds(t *testing.T) {
 	lowerThan035EpsilonProto3 := buildProto3("-%ab", 11, "abba", 99, 0.3, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if lowerThan035EpsilonProto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, lowerThan035EpsilonProto3.Validate())
+
 	lowerThan035EpsilonProto2 := buildProto2("-%ab", 11, "abba", 99, 0.3, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if lowerThan035EpsilonProto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, lowerThan035EpsilonProto2.Validate())
+
 	greaterThan035EpsilonProto3 := buildProto3("-%ab", 11, "abba", 99, 0.300000001, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if greaterThan035EpsilonProto3.Validate() != nil {
-		t.Fatalf("unexpected fail in validator")
-	}
+	assert.NoError(t, greaterThan035EpsilonProto3.Validate())
+
 	greaterThan035EpsilonProto2 := buildProto2("-%ab", 11, "abba", 99, 0.300000001, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if greaterThan035EpsilonProto2.Validate() != nil {
-		t.Fatalf("unexpected fail in validator")
-	}
+	assert.NoError(t, greaterThan035EpsilonProto2.Validate())
 }
 
 func TestDoubleStrictUpperBounds(t *testing.T) {
 	greaterThan065EpsilonProto3 := buildProto3("-%ab", 11, "abba", 99, 0.70000000001, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if greaterThan065EpsilonProto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, greaterThan065EpsilonProto3.Validate())
+
 	greaterThan065EpsilonProto2 := buildProto2("-%ab", 11, "abba", 99, 0.70000000001, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if greaterThan065EpsilonProto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, greaterThan065EpsilonProto2.Validate())
+
 	lowerThan065EpsilonProto3 := buildProto3("-%ab", 11, "abba", 99, 0.6999999999, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if lowerThan065EpsilonProto3.Validate() != nil {
-		t.Fatalf("unexpected fail in validator")
-	}
+	assert.NoError(t, lowerThan065EpsilonProto3.Validate())
+
 	lowerThan065EpsilonProto2 := buildProto2("-%ab", 11, "abba", 99, 0.6999999999, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if lowerThan065EpsilonProto2.Validate() != nil {
-		t.Fatalf("unexpected fail in validator")
-	}
+	assert.NoError(t, lowerThan065EpsilonProto2.Validate())
 }
 
 func TestFloatStrictLowerBounds(t *testing.T) {
 	lowerThan035EpsilonProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.2999999, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if lowerThan035EpsilonProto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, lowerThan035EpsilonProto3.Validate())
+
 	lowerThan035EpsilonProto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.2999999, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if lowerThan035EpsilonProto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, lowerThan035EpsilonProto2.Validate())
+
 	greaterThan035EpsilonProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.3000001, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := greaterThan035EpsilonProto3.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, greaterThan035EpsilonProto3.Validate())
+
 	greaterThan035EpsilonProto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.3000001, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := greaterThan035EpsilonProto2.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, greaterThan035EpsilonProto2.Validate())
 }
 
 func TestFloatStrictUpperBounds(t *testing.T) {
 	greaterThan065EpsilonProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.7000001, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if greaterThan065EpsilonProto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, greaterThan065EpsilonProto3.Validate())
+
 	greaterThan065EpsilonProto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.7000001, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if greaterThan065EpsilonProto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, greaterThan065EpsilonProto2.Validate())
+
 	lowerThan065EpsilonProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.6999999, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := lowerThan065EpsilonProto3.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, lowerThan065EpsilonProto3.Validate())
+
 	lowerThan065EpsilonProto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.6999999, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := lowerThan065EpsilonProto2.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, lowerThan065EpsilonProto2.Validate())
 }
 
 func TestDoubleNonStrictLowerBounds(t *testing.T) {
 	lowerThan0Proto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.2499999, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if lowerThan0Proto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, lowerThan0Proto3.Validate())
+
 	lowerThan0Proto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.2499999, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if lowerThan0Proto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, lowerThan0Proto2.Validate())
+
 	equalTo0Proto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.25, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := equalTo0Proto3.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, equalTo0Proto3.Validate())
+
 	equalTo0Proto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.25, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := equalTo0Proto2.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, equalTo0Proto2.Validate())
 }
 
 func TestDoubleNonStrictUpperBounds(t *testing.T) {
 	higherThan1Proto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.75111111, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if higherThan1Proto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, higherThan1Proto3.Validate())
+
 	higherThan1Proto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.75111111, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if higherThan1Proto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, higherThan1Proto2.Validate())
+
 	equalTo0Proto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.75, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := equalTo0Proto3.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, equalTo0Proto3.Validate())
+
 	equalTo0Proto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.75, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := equalTo0Proto2.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, equalTo0Proto2.Validate())
 }
 
 func TestFloatNonStrictLowerBounds(t *testing.T) {
 	lowerThan0Proto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.2499999, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if lowerThan0Proto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, lowerThan0Proto3.Validate())
+
 	lowerThan0Proto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.2499999, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if lowerThan0Proto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, lowerThan0Proto2.Validate())
+
 	equalTo0Proto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.25, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := equalTo0Proto3.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, equalTo0Proto3.Validate())
+
 	equalTo0Proto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.25, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := equalTo0Proto2.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, equalTo0Proto2.Validate())
 }
 
 func TestFloatNonStrictUpperBounds(t *testing.T) {
 	higherThan1Proto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.75111111, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if higherThan1Proto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, higherThan1Proto3.Validate())
+
 	higherThan1Proto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.75111111, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if higherThan1Proto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, higherThan1Proto2.Validate())
+
 	equalTo0Proto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.75, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := equalTo0Proto3.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, equalTo0Proto3.Validate())
+
 	equalTo0Proto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.75, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := equalTo0Proto2.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, equalTo0Proto2.Validate())
 }
 
 func TestStringNonEmpty(t *testing.T) {
 	emptyStringProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if emptyStringProto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, emptyStringProto3.Validate())
+
 	emptyStringProto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if emptyStringProto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, emptyStringProto2.Validate())
+
 	nonEmptyStringProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := nonEmptyStringProto3.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, nonEmptyStringProto3.Validate())
+
 	nonEmptyStringProto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := nonEmptyStringProto2.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, nonEmptyStringProto2.Validate())
 }
 
 func TestRepeatedEltsCount(t *testing.T) {
 	notEnoughEltsProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 1, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if notEnoughEltsProto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, notEnoughEltsProto3.Validate())
+
 	notEnoughEltsProto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 1, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if notEnoughEltsProto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, notEnoughEltsProto2.Validate())
+
 	tooManyEltsProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 14, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if tooManyEltsProto3.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, tooManyEltsProto3.Validate())
+
 	tooManyEltsProto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 14, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if tooManyEltsProto2.Validate() == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, tooManyEltsProto2.Validate())
+
 	validEltsCountProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := validEltsCountProto3.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, validEltsCountProto3.Validate())
+
 	validEltsCountProto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := validEltsCountProto2.Validate(); err != nil {
-		t.Fatalf("unexpected fail in validator %v", err)
-	}
+	assert.NoError(t, validEltsCountProto2.Validate())
 }
 
 func TestMsgExist(t *testing.T) {
 	someProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
 
 	someProto3.SomeEmbedded = nil
-	if err := someProto3.Validate(); err != nil {
-		t.Fatalf("validate shouldn't fail on missing SomeEmbedded, not annotated")
-	}
+	assert.NoError(t, someProto3.Validate())
+
 	someProto3.SomeEmbeddedExists = nil
-	if err := someProto3.Validate(); err == nil {
-		t.Fatalf("expected fail due to lacking SomeEmbeddedExists")
-	} else if !strings.HasPrefix(err.Error(), "invalid field SomeEmbeddedExists:") {
-		t.Fatalf("expected fieldError, got '%v'", err)
-	}
+	err := someProto3.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid field SomeEmbeddedExists:")
 }
 
 func TestStringLengthValidator(t *testing.T) {
-	StringLengthErrorProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "abc456", stableBytes, uuid1, uuid4, 0, 0)
-	if err := StringLengthErrorProto3.Validate(); err == nil {
-		t.Fatalf("validate shouldn't fail on error length")
-	}
-	StringLengthSuccess := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := StringLengthSuccess.Validate(); err != nil {
-		t.Fatalf("validate shouldn't fail on equal length")
-	}
+	stringLengthErrorProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "abc456", stableBytes, uuid1, uuid4, 0, 0)
+	assert.Error(t, stringLengthErrorProto3.Validate())
+
+	stringLengthSuccess := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
+	assert.NoError(t, stringLengthSuccess.Validate())
 }
 
 func TestBytesLengthValidator(t *testing.T) {
-	StringLengthErrorProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "abc456", []byte("anc"), uuid1, uuid4, 0, 0)
-	if err := StringLengthErrorProto3.Validate(); err == nil {
-		t.Fatalf("validate shouldn't fail on error length")
-	}
-	StringLengthSuccess := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
-	if err := StringLengthSuccess.Validate(); err != nil {
-		t.Fatalf("validate shouldn't fail on equal length")
-	}
+	stringLengthErrorProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "abc456", []byte("anc"), uuid1, uuid4, 0, 0)
+	assert.Error(t, stringLengthErrorProto3.Validate())
+
+	stringLengthSuccess := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
+	assert.NoError(t, stringLengthSuccess.Validate())
 }
 
 func TestValueIsInEnum(t *testing.T) {
 	outOfTopLevelEnumProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 2, 0)
-	if err := outOfTopLevelEnumProto3.Validate(); err == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, outOfTopLevelEnumProto3.Validate())
+
 	outOfTopLevelEnumProto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 2, 0)
-	if err := outOfTopLevelEnumProto2.Validate(); err == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, outOfTopLevelEnumProto2.Validate())
+
 	outOfEmbeddedEnumProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 2)
-	if err := outOfEmbeddedEnumProto3.Validate(); err == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, outOfEmbeddedEnumProto3.Validate())
+
 	outOfEmbeddedEnumProto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 2)
-	if err := outOfEmbeddedEnumProto2.Validate(); err == nil {
-		t.Fatalf("expected fail in validator, but it didn't happen")
-	}
+	assert.Error(t, outOfEmbeddedEnumProto2.Validate())
 }
 
 func TestNestedError3(t *testing.T) {
 	someProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
 
 	someProto3.SomeEmbeddedExists.SomeValue = 101 // should be less than 101
-	if err := someProto3.Validate(); err == nil {
-		t.Fatalf("expected fail due to nested SomeEmbeddedNonNullable.SomeValue being wrong")
-	} else if !strings.HasPrefix(err.Error(), "invalid field SomeEmbeddedNonNullable.SomeValue:") {
-		t.Fatalf("expected fieldError, got '%v'", err)
-	}
+	err := someProto3.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid field SomeEmbeddedExists.SomeValue:")
 }
 
 func TestCustomError_Proto3(t *testing.T) {
 	someProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
 
 	someProto3.CustomErrorInt = 30
-	expectedErr := "invalid field CustomErrorInt: My Custom Error"
-	if err := someProto3.Validate(); err == nil {
-		t.Fatalf("validate should fail on missing CustomErrorInt")
-	} else if err.Error() != expectedErr {
-		t.Fatalf("validation error should be '%s' but was '%s'", expectedErr, err.Error())
-	}
+	err := someProto3.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid field CustomErrorInt: My Custom Error")
 }
 
 func TestMapAlwaysPassesUntilFixedProperly(t *testing.T) {
 	example := &ValidatorMapMessage3{}
-	if err := example.Validate(); err != nil {
-		t.Fatalf("map validators should always pass")
+	assert.NoError(t, example.Validate())
+}
+
+func TestMapPrimitiveTypeValuesAreValidates(t *testing.T) {
+	mapError := &ValidatorMapMessage3{
+		SomeStringMap: map[string]string{
+			"foo": "toolong",
+		},
 	}
+	assert.Error(t, mapError.Validate())
+
+	mapSucces := &ValidatorMapMessage3{
+		SomeStringMap: map[string]string{
+			"foo": "abba",
+		},
+	}
+	assert.NoError(t, mapSucces.Validate())
+}
+
+func TestMapNestedStructsAreValidated(t *testing.T) {
+	mapError1 := &ValidatorMapMessage3{
+		SomeExtMap: map[string]*ValueType{
+			"foo": {Something: "foo"},
+			"bar": {Something: ""},
+		},
+	}
+	assert.Error(t, mapError1.Validate())
+
+	mapError2 := &ValidatorMapMessage3{
+		SomeNestedMap: map[int32]*ValidatorMapMessage3_NestedType{
+			0: nil,
+		},
+	}
+	assert.Error(t, mapError2.Validate())
+
+	mapSucces1 := &ValidatorMapMessage3{
+		SomeExtMap: map[string]*ValueType{
+			"foo": {Something: "foo"},
+			"bar": {Something: "bar"},
+		},
+	}
+	assert.NoError(t, mapSucces1.Validate())
+
+	mapSucces := &ValidatorMapMessage3{
+		SomeNestedMap: map[int32]*ValidatorMapMessage3_NestedType{
+			0: {},
+		},
+	}
+	assert.NoError(t, mapSucces.Validate())
 }
 
 func TestOneOf_Required(t *testing.T) {
@@ -511,8 +441,8 @@ func TestOneOf_Required(t *testing.T) {
 		SomeInt: 30,
 	}
 	err := example.Validate()
-	assert.Error(t, err, "oneof.required should fail if none of the oneof fields are set")
-	assert.Contains(t, err.Error(), "Something", "error must err on the Something field")
+	require.Error(t, err, "oneof.required should fail if none of the oneof fields are set")
+	assert.Contains(t, err.Error(), "invalid field Something:")
 }
 
 func TestOneOf_NestedMessage(t *testing.T) {
@@ -529,7 +459,7 @@ func TestOneOf_NestedMessage(t *testing.T) {
 		},
 	}
 	err := example.Validate()
-	assert.Error(t, err, "nested message in oneof should fail validation on ExternalMsg")
+	require.Error(t, err, "nested message in oneof should fail validation on ExternalMsg")
 	assert.Contains(t, err.Error(), "OneMsg.Identifier", "error must err on the ExternalMsg.Identifier")
 }
 
@@ -547,7 +477,7 @@ func TestOneOf_NestedInt(t *testing.T) {
 		},
 	}
 	err := example.Validate()
-	assert.Error(t, err, "nested message in oneof should fail validation on ThreeInt")
+	require.Error(t, err, "nested message in oneof should fail validation on ThreeInt")
 	assert.Contains(t, err.Error(), "ThreeInt", "error must err on the ThreeInt.ThreeInt")
 }
 
@@ -576,7 +506,7 @@ func TestOneOf_Regex(t *testing.T) {
 		},
 	}
 	err := example.Validate()
-	assert.Error(t, err, "regex applied to oneof field should fail validation on FiveRegex")
+	require.Error(t, err, "regex applied to oneof field should fail validation on FiveRegex")
 	assert.Contains(t, err.Error(), "FiveRegex", "error must err on the FiveRegex")
 
 	example = &OneOfMessage3{
@@ -590,51 +520,54 @@ func TestOneOf_Regex(t *testing.T) {
 }
 
 func TestUUID4Validation(t *testing.T) {
-	testcases := []struct {
+	testcases := map[string]struct {
 		uuid string
 		fail bool
 	}{
-		{
+		"UUID1": {
 			uuid: uuid1,
 			fail: true,
 		},
-		{
+		"UUID4": {
 			uuid: uuid4,
 			fail: false,
 		},
-		{
+		"EmptyField": {
 			uuid: "",
 			fail: true,
 		},
-		{
+		"NonUUID1": {
 			uuid: "66bb25e2-2e0d",
 			fail: true,
 		},
-		{
+		"NonUUID2": {
 			uuid: "1234abcd",
 			fail: true,
 		},
 	}
 
-	for _, tc := range testcases {
-		t.Run(fmt.Sprintf("proto2 uuid '%s'", tc.uuid), func(t *testing.T) {
-			msg := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, tc.uuid, 0, 0)
+	for name := range testcases {
+		tc := testcases[name]
+		t.Run(name, func(t *testing.T) {
+			t.Run("Proto2", func(t *testing.T) {
+				msg := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, tc.uuid, 0, 0)
 
-			err := msg.Validate()
-			failed := err != nil
-			if tc.fail != failed {
-				t.Errorf("Expected validation failure: %t, but got %t, err: %v", tc.fail, failed, err)
-			}
-		})
+				if tc.fail {
+					assert.Error(t, msg.Validate())
+				} else {
+					assert.NoError(t, msg.Validate())
+				}
+			})
 
-		t.Run(fmt.Sprintf("proto3 uuid '%s'", tc.uuid), func(t *testing.T) {
-			msg := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, tc.uuid, 0, 0)
+			t.Run("Proto3", func(t *testing.T) {
+				msg := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, tc.uuid, 0, 0)
 
-			err := msg.Validate()
-			failed := err != nil
-			if tc.fail != failed {
-				t.Errorf("Expected validation failure: %t, but got %t, err: %v", tc.fail, failed, err)
-			}
+				if tc.fail {
+					assert.Error(t, msg.Validate())
+				} else {
+					assert.NoError(t, msg.Validate())
+				}
+			})
 		})
 	}
 }

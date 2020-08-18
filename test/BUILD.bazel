@@ -1,36 +1,49 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
-proto_library(
-    name = "proto2",
-    srcs = ["validator_proto2.proto"],
-    deps = [
-        "//:validator_proto",
-        "@gogo_special_proto//github.com/gogo/protobuf/gogoproto",
-    ],
-    visibility = ["//test:__subpackages__"],
-)
+# gazelle:proto_import_prefix
+# gazelle:go_proto_compilers @io_bazel_rules_go//proto:go_proto,//:go_proto_validators
+# gazelle:resolve proto go github.com/mwitkow/go-proto-validators/validators.proto //:go_default_library
+# gazelle:exclude *.pb.go
 
 proto_library(
-    name = "proto3",
-    srcs = ["validator_proto3.proto"],
-    deps = [
-        "//:validator_proto",
-        "@gogo_special_proto//github.com/gogo/protobuf/gogoproto",
+    name = "validatortest_proto",
+    srcs = [
+        "validator_proto2.proto",
+        "validator_proto3.proto",
+        "validator_proto3_map.proto",
+        "validator_proto3_oneof.proto",
     ],
-    visibility = ["//test:__subpackages__"],
+    visibility = ["//visibility:public"],
+    deps = ["//:validators_proto"],
 )
 
-proto_library(
-    name = "proto3_oneof",
-    srcs = ["validator_proto3_oneof.proto"],
-    deps = [
-        "//:validator_proto",
+go_proto_library(
+    name = "validatortest_go_proto",
+    compilers = [
+        "@io_bazel_rules_go//proto:go_proto",
+        "//:go_proto_validators",
     ],
-    visibility = ["//test:__subpackages__"],
+    importpath = "github.com/mwitkow/go-proto-validators/test",
+    proto = ":validatortest_proto",
+    visibility = ["//visibility:public"],
+    deps = ["//:go_default_library"],
 )
 
-proto_library(
-    name = "proto3_map",
-    srcs = ["validator_proto3_map.proto"],
-    visibility = ["//test:__subpackages__"],
+go_library(
+    name = "go_default_library",
+    embed = [":validatortest_go_proto"],
+    importpath = "github.com/mwitkow/go-proto-validators/test",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["validator_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "@com_github_stretchr_testify//assert:go_default_library",
+        "@com_github_stretchr_testify//require:go_default_library",
+    ],
 )
