@@ -461,6 +461,35 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	}
 }
 
+func (p *plugin) generateStringLengthValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+	if fv.LengthGt != nil {
+		p.P(`if !( len([]rune(`, variableName, `)) > `, fv.LengthGt, `) {`)
+		p.In()
+		errorStr := fmt.Sprintf(`have a length greater than '%d'`, fv.GetLengthGt())
+		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		p.Out()
+		p.P(`}`)
+	}
+
+	if fv.LengthLt != nil {
+		p.P(`if !( len([]rune(`, variableName, `)) < `, fv.LengthLt, `) {`)
+		p.In()
+		errorStr := fmt.Sprintf(`have a length smaller than '%d'`, fv.GetLengthLt())
+		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		p.Out()
+		p.P(`}`)
+	}
+
+	if fv.LengthEq != nil {
+		p.P(`if !( len([]rune(`, variableName, `)) == `, fv.LengthEq, `) {`)
+		p.In()
+		errorStr := fmt.Sprintf(`have a length equal to '%d'`, fv.GetLengthEq())
+		p.generateErrorString(variableName, fieldName, errorStr, fv)
+		p.Out()
+		p.P(`}`)
+	}
+}
+
 func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	upperIsStrict := true
 	lowerIsStrict := true
@@ -582,7 +611,7 @@ func (p *plugin) generateStringValidator(variableName string, ccTypeName string,
 		p.Out()
 		p.P(`}`)
 	}
-	p.generateLengthValidator(variableName, ccTypeName, fieldName, fv)
+	p.generateStringLengthValidator(variableName, ccTypeName, fieldName, fv)
 }
 
 func (p *plugin) generateRepeatedCountValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
