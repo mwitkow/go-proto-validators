@@ -61,7 +61,7 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/vanity"
 
-	validator "github.com/mwitkow/go-proto-validators"
+	validator "github.com/maanasasubrahmanyam-sd/go-proto-validators"
 )
 
 const uuidPattern = "^([a-fA-F0-9]{8}-" +
@@ -353,6 +353,35 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		} else if field.IsBytes() {
 			p.generateLengthValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if field.IsMessage() {
+			if p.validatorWithFutureTimestamp(fieldValidator) {
+				if nullable && !repeated {
+					if p.fieldIsTimestamp(field) {
+						p.P(`if nil == `, variableName, `{`)
+						p.In()
+						p.P(`return `, p.fmtPkg.Use(), `.Errorf("field `, fieldName, ` cant be nil")`)
+						p.Out()
+						p.P(`}`)
+						p.P(`ts`, fieldName, `, err := `, p.ptypesPkg.Use(), `.Timestamp(`, variableName, `)`)
+						p.P(`if err != nil {`)
+						p.In()
+						p.P(`return `, p.fmtPkg.Use(), `.Errorf("faield to convert `, fieldName, ` to Timestamp")`)
+						p.Out()
+						p.P(`}`)
+						p.P(`if !ts`, fieldName, `.After(`, p.timePkg.Use(), `.Now()) {`)
+						p.In()
+						p.P(`return `, p.fmtPkg.Use(), `.Errorf("must be future timestamp")`)
+						p.Out()
+						p.P(`}`)
+					} else {
+						fmt.Fprintf(os.Stderr, "WARNING: field %+v", field.GetTypeName())
+						fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is not of type google.protobuf.Timestamp, validator.future_timestamp has no effect\n", ccTypeName, fieldName)
+					}
+				} else if repeated {
+					fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is repeated, validator.future_timestamp has no effect\n", ccTypeName, fieldName)
+				} else if !nullable {
+					fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is a nullable=false, validator.future_timestamp has no effect\n", ccTypeName, fieldName)
+				}
+			}else {
 			if p.validatorWithMessageExists(fieldValidator) {
 				if nullable && !repeated {
 					p.P(`if nil == `, variableName, `{`)
@@ -383,6 +412,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				p.P(`}`)
 			}
 		}
+	}
 		if repeated && (field.IsMessage() || p.validatorWithNonRepeatedConstraint(fieldValidator)) {
 			// end the repeated loop
 			p.Out()
@@ -686,4 +716,15 @@ func (p *plugin) validatorWithNonRepeatedConstraint(fv *validator.FieldValidator
 
 func (p *plugin) regexName(ccTypeName string, fieldName string) string {
 	return "_regex_" + ccTypeName + "_" + fieldName
+}
+
+func (p *plugin) validatorWithFutureTimestamp(fv *validator.FieldValidator) bool {
+	return fv != nil && fv.FutureTimestamp != nil && *(fv.FutureTimestamp)
+}
+
+func (p *plugin) fieldIsTimestamp(field *descriptor.FieldDescriptorProto) bool {
+	if field.GetType() == descriptor.FieldDescriptorProto_TYPE_MESSAGE && field.GetTypeName() == ".google.protobuf.Timestamp" {
+		return true
+	}
+	return false
 }
