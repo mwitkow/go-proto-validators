@@ -11,7 +11,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	validator_plugin "github.com/mwitkow/go-proto-validators/plugin"
+	validator_plugin "github.com/maanasasubrahmanyam-sd/go-proto-validators/plugin"
 )
 
 func main() {

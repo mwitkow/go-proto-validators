@@ -1,51 +1,4 @@
-// Copyright 2016 Michal Witkowski. All Rights Reserved.
-// See LICENSE for licensing terms.
 
-/*
-
-The validator plugin generates a Validate method for each message.
-By default, if none of the message's fields are annotated with the gogo validator annotation, it returns a nil.
-In case some of the fields are annotated, the Validate function returns nil upon sucessful validation, or an error
-describing why the validation failed.
-The Validate method is called recursively for all submessage of the message.
-
-TODO(michal): ADD COMMENTS.
-
-Equal is enabled using the following extensions:
-
-  - equal
-  - equal_all
-
-While VerboseEqual is enable dusing the following extensions:
-
-  - verbose_equal
-  - verbose_equal_all
-
-The equal plugin also generates a test given it is enabled using one of the following extensions:
-
-  - testgen
-  - testgen_all
-
-Let us look at:
-
-  github.com/gogo/protobuf/test/example/example.proto
-
-Btw all the output can be seen at:
-
-  github.com/gogo/protobuf/test/example/*
-
-The following message:
-
-
-
-given to the equal plugin, will generate the following code:
-
-
-
-and the following test code:
-
-
-*/
 package plugin
 
 import (
@@ -61,7 +14,7 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/vanity"
 
-	validator "github.com/maanasasubrahmanyam-sd/go-proto-validators"
+	validator "github.com/maanasasubrahmanyam-sd/go-proto-validators/validator"
 )
 
 const uuidPattern = "^([a-fA-F0-9]{8}-" +
@@ -98,7 +51,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
-	p.validatorPkg = p.NewImport("github.com/mwitkow/go-proto-validators")
+	p.validatorPkg = p.NewImport("github.com/maanasasubrahmanyam-sd/go-proto-validators/validator")
 
 	for _, msg := range file.Messages() {
 		if msg.DescriptorProto.GetOptions().GetMapEntry() {
@@ -361,13 +314,13 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 						p.P(`return `, p.fmtPkg.Use(), `.Errorf("field `, fieldName, ` cant be nil")`)
 						p.Out()
 						p.P(`}`)
-						p.P(`ts`, fieldName, `, err := `, p.ptypesPkg.Use(), `.Timestamp(`, variableName, `)`)
+						//p.P(`ts`, fieldName, `, err := `, p.ptypesPkg.Use(), `.Timestamp(`, variableName, `)`)
 						p.P(`if err != nil {`)
 						p.In()
 						p.P(`return `, p.fmtPkg.Use(), `.Errorf("faield to convert `, fieldName, ` to Timestamp")`)
 						p.Out()
 						p.P(`}`)
-						p.P(`if !ts`, fieldName, `.After(`, p.timePkg.Use(), `.Now()) {`)
+						//p.P(`if !ts`, fieldName, `.After(`, p.timePkg.Use(), `.Now()) {`)
 						p.In()
 						p.P(`return `, p.fmtPkg.Use(), `.Errorf("must be future timestamp")`)
 						p.Out()
