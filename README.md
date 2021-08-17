@@ -139,3 +139,14 @@ Basically the magical incantation (apart from includes) is the `--govalidators_o
 ## License
 
 `go-proto-validators` is released under the Apache 2.0 license. See the [LICENSE](LICENSE) file for details.
+
+
+##Maanasa notes
+
+maanasa@Maanasas-MacBook-Air go-proto-validators % protoc  \
+--proto_path=${GOPATH}/src \
+--proto_path=${GOPATH}/pkg/mod/github.com/gogo/protobuf@v1.3.2 \
+--proto_path=. \
+--gogo_out=. \
+--govalidators_out=gogoimport=true:. \
+*.proto
