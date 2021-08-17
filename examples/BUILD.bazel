@@ -1,0 +1,39 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+
+# gazelle:proto_import_prefix github.com/mwitkow/go-proto-validators
+# gazelle:go_proto_compilers @io_bazel_rules_go//proto:go_proto,//:go_proto_validators
+# gazelle:resolve proto go github.com/mwitkow/go-proto-validators/validators.proto //:go_default_library
+# gazelle:exclude *.pb.go
+
+proto_library(
+    name = "validator_examples_proto",
+    srcs = [
+        "enum.proto",
+        "nested.proto",
+        "uuid.proto",
+    ],
+    import_prefix = "github.com/mwitkow/go-proto-validators",
+    visibility = ["//visibility:public"],
+    deps = ["//:validators_proto"],
+)
+
+go_proto_library(
+    name = "validator_examples_go_proto",
+    compilers = [
+        "@io_bazel_rules_go//proto:go_proto",
+        "//:go_proto_validators",
+    ],
+    importpath = "github.com/mwitkow/go-proto-validators/examples",
+    proto = ":validator_examples_proto",
+    visibility = ["//visibility:public"],
+    deps = ["//:go_default_library"],
+)
+
+go_library(
+    name = "go_default_library",
+    embed = [":validator_examples_go_proto"],
+    importpath = "github.com/mwitkow/go-proto-validators/examples",
+    visibility = ["//visibility:public"],
+)

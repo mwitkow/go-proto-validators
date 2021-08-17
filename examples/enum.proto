@@ -1,10 +1,8 @@
 syntax = "proto3";
 package validator.examples;
-import "github.com/mwitkow/go-proto-validators/validator.proto";
+import "github.com/mwitkow/go-proto-validators/validators.proto";
 
-message SomeMsg {
-  Action do = 1 [(validator.field) = {is_in_enum : true}];
-}
+message SomeMsg { Action do = 1 [ (validator.field) = {is_in_enum : true} ]; }
 
 enum Action {
   ALLOW = 0;

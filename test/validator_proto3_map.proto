@@ -4,20 +4,21 @@
 syntax = "proto3";
 package validatortest;
 
+import "github.com/mwitkow/go-proto-validators/validators.proto";
+
 message ValueType {
-  string something  = 1 ;
+  string something = 1 [ (validator.field) = {string_not_empty : true} ];
 }
 
-// This needs to be able to compile. Fixes https://github.com/mwitkow/go-proto-validators/issues/1
+// This needs to be able to compile. Fixes
+// https://github.com/mwitkow/go-proto-validators/issues/1
 message ValidatorMapMessage3 {
-	map<string, string> SomeStringMap = 1;
+  map<string, string> SomeStringMap = 1
+      [ (validator.field) = {regex : "^[a-z]{2,5}$"} ];
 
-  message NestedType {
-      string something = 1 ;
-  }
+  message NestedType { string something = 1; }
 
   map<string, ValueType> SomeExtMap = 2;
-  map<int32, ValidatorMapMessage3.NestedType> SomeNestedMap = 3;
+  map<int32, ValidatorMapMessage3.NestedType> SomeNestedMap = 3
+      [ (validator.field) = {msg_exists : true} ];
 }
-
-
