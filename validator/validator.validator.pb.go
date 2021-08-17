@@ -18,6 +18,3 @@ var _ = math.Inf
 func (this *FieldValidator) Validate() error {
 	return nil
 }
-func (this *OneofValidator) Validate() error {
-	return nil
-}

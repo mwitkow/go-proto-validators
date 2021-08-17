@@ -3,16 +3,12 @@ package plugin
 
 import (
 	"fmt"
-	"os"
-	"reflect"
-	"strconv"
-	"strings"
-
 	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/vanity"
+	"os"
 
 	validator "github.com/maanasasubrahmanyam-sd/go-proto-validators/validator"
 )
@@ -48,21 +44,22 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	if !p.useGogoImport {
 		vanity.TurnOffGogoImport(file.FileDescriptorProto)
 	}
+
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
 	p.validatorPkg = p.NewImport("github.com/maanasasubrahmanyam-sd/go-proto-validators/validator")
 
 	for _, msg := range file.Messages() {
-		if msg.DescriptorProto.GetOptions().GetMapEntry() {
+		/*if msg.DescriptorProto.GetOptions().GetMapEntry() {
 			continue
-		}
-		p.generateRegexVars(file, msg)
+		}*/
+		//p.generateRegexVars(file, msg)
 		if gogoproto.IsProto3(file.FileDescriptorProto) {
 			p.generateProto3Message(file, msg)
-		} else {
+		} /*else {
 			p.generateProto2Message(file, msg)
-		}
+		}*/
 	}
 }
 
@@ -76,7 +73,7 @@ func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.F
 	return nil
 }
 
-func getOneofValidatorIfAny(oneof *descriptor.OneofDescriptorProto) *validator.OneofValidator {
+/*func getOneofValidatorIfAny(oneof *descriptor.OneofDescriptorProto) *validator.OneofValidator {
 	if oneof.Options != nil {
 		v, err := proto.GetExtension(oneof.Options, validator.E_Oneof)
 		if err == nil && v.(*validator.OneofValidator) != nil {
@@ -84,9 +81,9 @@ func getOneofValidatorIfAny(oneof *descriptor.OneofDescriptorProto) *validator.O
 		}
 	}
 	return nil
-}
+}*/
 
-func (p *plugin) isSupportedInt(field *descriptor.FieldDescriptorProto) bool {
+/*func (p *plugin) isSupportedInt(field *descriptor.FieldDescriptorProto) bool {
 	switch *(field.Type) {
 	case descriptor.FieldDescriptorProto_TYPE_INT32, descriptor.FieldDescriptorProto_TYPE_INT64:
 		return true
@@ -97,8 +94,8 @@ func (p *plugin) isSupportedInt(field *descriptor.FieldDescriptorProto) bool {
 	}
 	return false
 }
-
-func (p *plugin) isSupportedFloat(field *descriptor.FieldDescriptorProto) bool {
+*/
+/*func (p *plugin) isSupportedFloat(field *descriptor.FieldDescriptorProto) bool {
 	switch *(field.Type) {
 	case descriptor.FieldDescriptorProto_TYPE_FLOAT, descriptor.FieldDescriptorProto_TYPE_DOUBLE:
 		return true
@@ -108,9 +105,9 @@ func (p *plugin) isSupportedFloat(field *descriptor.FieldDescriptorProto) bool {
 		return true
 	}
 	return false
-}
+}*/
 
-func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *generator.Descriptor) {
+/*func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	for _, field := range message.Field {
 		validator := getFieldValidatorIfAny(field)
@@ -131,7 +128,7 @@ func (p *plugin) generateRegexVars(file *generator.FileDescriptor, message *gene
 			}
 		}
 	}
-}
+}*/
 
 func (p *plugin) GetFieldName(message *generator.Descriptor, field *descriptor.FieldDescriptorProto) string {
 	fieldName := p.Generator.GetFieldName(message, field)
@@ -155,7 +152,7 @@ func (p *plugin) GetOneOfFieldName(message *generator.Descriptor, field *descrip
 	return fieldName
 }
 
-func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *generator.Descriptor) {
+/*func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 
 	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
@@ -236,14 +233,14 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 	p.P(`return nil`)
 	p.Out()
 	p.P(`}`)
-}
+}*/
 
 func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
 	p.In()
 
-	for _, oneof := range message.OneofDecl {
+	/*for _, oneof := range message.OneofDecl {
 		oneofValidator := getOneofValidatorIfAny(oneof)
 		if oneofValidator == nil {
 			continue
@@ -256,38 +253,38 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			p.Out()
 			p.P(`}`)
 		}
-	}
+	}*/
 	for _, field := range message.Field {
 		fieldValidator := getFieldValidatorIfAny(field)
 		if fieldValidator == nil && !field.IsMessage() {
 			continue
 		}
-		isOneOf := field.OneofIndex != nil
-		fieldName := p.GetOneOfFieldName(message, field)
-		variableName := "this." + fieldName
-		repeated := field.IsRepeated()
+		//isOneOf := field.OneofIndex != nil
+		//fieldName := p.GetOneOfFieldName(message, field)
+		//variableName := "this." + fieldName
+		//repeated := field.IsRepeated()
 		// Golang's proto3 has no concept of unset primitive fields
-		nullable := (gogoproto.IsNullable(field) || !gogoproto.ImportsGoGoProto(file.FileDescriptorProto)) && field.IsMessage() && !(p.useGogoImport && gogoproto.IsEmbed(field))
-		if p.fieldIsProto3Map(file, message, field) {
+		//nullable := (gogoproto.IsNullable(field) || !gogoproto.ImportsGoGoProto(file.FileDescriptorProto)) && field.IsMessage() && !(p.useGogoImport && gogoproto.IsEmbed(field))
+		/*if p.fieldIsProto3Map(file, message, field) {
 			p.P(`// Validation of proto3 map<> fields is unsupported.`)
 			continue
-		}
-		if isOneOf {
+		}*/
+		/*if isOneOf {
 			p.In()
 			oneOfName := p.GetFieldName(message, field)
 			oneOfType := p.OneOfTypeName(message, field)
 			// if x, ok := m.GetType().(*OneOfMessage3_OneInt); ok {
 			p.P(`if oneOfNester, ok := this.Get` + oneOfName + `().(* ` + oneOfType + `); ok {`)
 			variableName = "oneOfNester." + p.GetOneOfFieldName(message, field)
-		}
-		if repeated {
+		}*/
+		/*if repeated {
 			p.generateRepeatedCountValidator(variableName, ccTypeName, fieldName, fieldValidator)
 			if field.IsMessage() || p.validatorWithNonRepeatedConstraint(fieldValidator) {
 				p.P(`for _, item := range `, variableName, `{`)
 				p.In()
 				variableName = "item"
 			}
-		} else if fieldValidator != nil {
+		}*/ /*else if fieldValidator != nil {
 			if fieldValidator.RepeatedCountMin != nil {
 				fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is not repeated, validator.min_elts has no effects\n", ccTypeName, fieldName)
 			}
@@ -304,77 +301,86 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 		} else if p.isSupportedFloat(field) {
 			p.generateFloatValidator(variableName, ccTypeName, fieldName, fieldValidator)
 		} else if field.IsBytes() {
-			p.generateLengthValidator(variableName, ccTypeName, fieldName, fieldValidator)
-		} else if field.IsMessage() {
-			if p.validatorWithFutureTimestamp(fieldValidator) {
-				if nullable && !repeated {
-					if p.fieldIsTimestamp(field) {
-						p.P(`if nil == `, variableName, `{`)
-						p.In()
-						p.P(`return `, p.fmtPkg.Use(), `.Errorf("field `, fieldName, ` cant be nil")`)
-						p.Out()
-						p.P(`}`)
-						//p.P(`ts`, fieldName, `, err := `, p.ptypesPkg.Use(), `.Timestamp(`, variableName, `)`)
-						p.P(`if err != nil {`)
-						p.In()
-						p.P(`return `, p.fmtPkg.Use(), `.Errorf("faield to convert `, fieldName, ` to Timestamp")`)
-						p.Out()
-						p.P(`}`)
-						//p.P(`if !ts`, fieldName, `.After(`, p.timePkg.Use(), `.Now()) {`)
-						p.In()
-						p.P(`return `, p.fmtPkg.Use(), `.Errorf("must be future timestamp")`)
-						p.Out()
-						p.P(`}`)
-					} else {
-						fmt.Fprintf(os.Stderr, "WARNING: field %+v", field.GetTypeName())
-						fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is not of type google.protobuf.Timestamp, validator.future_timestamp has no effect\n", ccTypeName, fieldName)
-					}
-				} else if repeated {
-					fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is repeated, validator.future_timestamp has no effect\n", ccTypeName, fieldName)
-				} else if !nullable {
-					fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is a nullable=false, validator.future_timestamp has no effect\n", ccTypeName, fieldName)
+			p.generateLengthValidator(variableName, ccTypeName, fieldName, fieldValidator)*/
+		//} else
+		if field.IsMessage() {
+			if p.validateRegex(fieldValidator) {
+				if(p.fieldIsCustomRegex(field)){
+					fmt.Fprintf(os.Stderr, "WARNING: field %+v", field.GetTypeName())
 				}
-			}else {
-			if p.validatorWithMessageExists(fieldValidator) {
-				if nullable && !repeated {
-					p.P(`if nil == `, variableName, `{`)
-					p.In()
-					p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("message must exist"))`)
-					p.Out()
-					p.P(`}`)
-				} else if repeated {
-					fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is repeated, validator.msg_exists has no effect\n", ccTypeName, fieldName)
-				} else if !nullable {
-					fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is a nullable=false, validator.msg_exists has no effect\n", ccTypeName, fieldName)
-				}
-			}
-			if nullable {
-				p.P(`if `, variableName, ` != nil {`)
-				p.In()
-			} else {
-				// non-nullable fields in proto3 store actual structs, we need pointers to operate on interfaces
-				variableName = "&(" + variableName + ")"
-			}
-			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `); err != nil {`)
-			p.In()
-			p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `", err)`)
-			p.Out()
-			p.P(`}`)
-			if nullable {
 				p.Out()
 				p.P(`}`)
 			}
-		}
-	}
-		if repeated && (field.IsMessage() || p.validatorWithNonRepeatedConstraint(fieldValidator)) {
-			// end the repeated loop
-			p.Out()
-			p.P(`}`)
-		}
-		if isOneOf {
-			// end the oneof if statement
-			p.Out()
-			p.P(`}`)
+			/*if p.validatorWithFutureTimestamp(fieldValidator) {
+					if nullable && !repeated {
+						if p.fieldIsTimestamp(field) {
+							p.P(`if nil == `, variableName, `{`)
+							p.In()
+							p.P(`return `, p.fmtPkg.Use(), `.Errorf("field `, fieldName, ` cant be nil")`)
+							p.Out()
+							p.P(`}`)
+							//p.P(`ts`, fieldName, `, err := `, p.ptypesPkg.Use(), `.Timestamp(`, variableName, `)`)
+							p.P(`if err != nil {`)
+							p.In()
+							p.P(`return `, p.fmtPkg.Use(), `.Errorf("faield to convert `, fieldName, ` to Timestamp")`)
+							p.Out()
+							p.P(`}`)
+							//p.P(`if !ts`, fieldName, `.After(`, p.timePkg.Use(), `.Now()) {`)
+							p.In()
+							p.P(`return `, p.fmtPkg.Use(), `.Errorf("must be future timestamp")`)
+							p.Out()
+							p.P(`}`)
+						} else {
+							fmt.Fprintf(os.Stderr, "WARNING: field %+v", field.GetTypeName())
+							fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is not of type google.protobuf.Timestamp, validator.future_timestamp has no effect\n", ccTypeName, fieldName)
+						}
+					} else if repeated {
+						fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is repeated, validator.future_timestamp has no effect\n", ccTypeName, fieldName)
+					} else if !nullable {
+						fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is a nullable=false, validator.future_timestamp has no effect\n", ccTypeName, fieldName)
+					}
+				}*//*else {
+				if p.validatorWithMessageExists(fieldValidator) {
+					if nullable && !repeated {
+						p.P(`if nil == `, variableName, `{`)
+						p.In()
+						p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("message must exist"))`)
+						p.Out()
+						p.P(`}`)
+					} else if repeated {
+						fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is repeated, validator.msg_exists has no effect\n", ccTypeName, fieldName)
+					} else if !nullable {
+						fmt.Fprintf(os.Stderr, "WARNING: field %v.%v is a nullable=false, validator.msg_exists has no effect\n", ccTypeName, fieldName)
+					}
+				}
+				if nullable {
+					p.P(`if `, variableName, ` != nil {`)
+					p.In()
+				} else {
+					// non-nullable fields in proto3 store actual structs, we need pointers to operate on interfaces
+					variableName = "&(" + variableName + ")"
+				}
+				p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `); err != nil {`)
+				p.In()
+				p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `", err)`)
+				p.Out()
+				p.P(`}`)
+				if nullable {
+					p.Out()
+					p.P(`}`)
+				}
+			}*/
+			//}
+			/*if repeated && (field.IsMessage() || p.validatorWithNonRepeatedConstraint(fieldValidator)) {
+				// end the repeated loop
+				p.Out()
+				p.P(`}`)
+			}
+			if isOneOf {
+				// end the oneof if statement
+				p.Out()
+				p.P(`}`)
+			}*/
 		}
 	}
 	p.P(`return nil`)
@@ -382,7 +388,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.P(`}`)
 }
 
-func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+/*func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if fv.IntGt != nil {
 		p.P(`if !(`, variableName, ` > `, fv.IntGt, `) {`)
 		p.In()
@@ -399,9 +405,9 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 		p.Out()
 		p.P(`}`)
 	}
-}
+}*/
 
-func (p *plugin) generateEnumValidator(
+/*func (p *plugin) generateEnumValidator(
 	field *descriptor.FieldDescriptorProto,
 	variableName, ccTypeName, fieldName string,
 	fv *validator.FieldValidator) {
@@ -413,9 +419,9 @@ func (p *plugin) generateEnumValidator(
 		p.Out()
 		p.P(`}`)
 	}
-}
+}*/
 
-func (p *plugin) generateLengthValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+/*func (p *plugin) generateLengthValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
 	if fv.LengthGt != nil {
 		p.P(`if !( len(`, variableName, `) > `, fv.LengthGt, `) {`)
 		p.In()
@@ -673,10 +679,25 @@ func (p *plugin) regexName(ccTypeName string, fieldName string) string {
 
 func (p *plugin) validatorWithFutureTimestamp(fv *validator.FieldValidator) bool {
 	return fv != nil && fv.FutureTimestamp != nil && *(fv.FutureTimestamp)
+}*/
+
+func (p *plugin) validateRegex(fv *validator.FieldValidator) bool { // maanasa
+	//string s = "^[A-Za-z0-9]";
+	if(*fv.CustomRegex == "maanasa"){
+		return true
+	}
+	return false
 }
 
-func (p *plugin) fieldIsTimestamp(field *descriptor.FieldDescriptorProto) bool {
+/*func (p *plugin) fieldIsTimestamp(field *descriptor.FieldDescriptorProto) bool {
 	if field.GetType() == descriptor.FieldDescriptorProto_TYPE_MESSAGE && field.GetTypeName() == ".google.protobuf.Timestamp" {
+		return true
+	}
+	return false
+}*/
+
+func (p *plugin) fieldIsCustomRegex(field *descriptor.FieldDescriptorProto) bool {
+	if field.GetType() == descriptor.FieldDescriptorProto_TYPE_MESSAGE && field.GetTypeName() == ".CustomRegex" {
 		return true
 	}
 	return false
