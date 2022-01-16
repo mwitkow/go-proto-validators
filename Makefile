@@ -15,7 +15,7 @@ prepare_deps:
 
 gazelle:
 	@bash bazel run --run_under="cd ${mkfile_dir} && " @bazel_gazelle//cmd/gazelle -- update-repos -from_file=go.mod -to_macro=go_deps.bzl%go_repositories
-	@bash bazel run //:gazelle -- --mode=fix --exclude=deps --exclude=examples --exclude=test
+	@bash bazel run //gazelle -- --mode=fix --exclude=deps --exclude=examples --exclude=test
 
 install:
 	@echo "--- Installing 'govalidators' binary to GOBIN."

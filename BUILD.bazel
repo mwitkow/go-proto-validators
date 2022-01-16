@@ -1,12 +1,7 @@
-load("@bazel_gazelle//:def.bzl", "gazelle")
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 load("@io_bazel_rules_go//proto:compiler.bzl", "go_proto_compiler")
 load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
-
-gazelle(
-    name = "gazelle",
-)
 
 # gazelle:prefix github.com/mwitkow/go-proto-validators
 # gazelle:build_file_name BUILD.bazel
