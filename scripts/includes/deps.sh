@@ -45,7 +45,7 @@ function setup_proto_deps() {
     proto_deps=(
         "github.com/gogo/protobuf"
         "github.com/golang/protobuf"
-        "github.com/mwitkow/go-proto-validators"
+        "github.com/sampingantech/go-proto-validators"
     )
 
     # Set up the target directory for symlinking in dependencies.

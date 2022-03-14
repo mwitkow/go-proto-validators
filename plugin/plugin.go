@@ -61,7 +61,7 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/vanity"
 
-	validator "github.com/mwitkow/go-proto-validators"
+	validator "github.com/sampingantech/go-proto-validators"
 )
 
 const uuidPattern = "^([a-fA-F0-9]{8}-" +
@@ -98,7 +98,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
-	p.validatorPkg = p.NewImport("github.com/mwitkow/go-proto-validators")
+	p.validatorPkg = p.NewImport("github.com/sampingantech/go-proto-validators")
 
 	for _, msg := range file.Messages() {
 		if msg.DescriptorProto.GetOptions().GetMapEntry() {
@@ -205,7 +205,9 @@ func (p *plugin) GetOneOfFieldName(message *generator.Descriptor, field *descrip
 func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
 
-	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
+	p.P(`func (this *`, ccTypeName, `) Validate() *`, p.validatorPkg.Use(), `.MultiError {`)
+	p.P(`multiError :=  `, p.validatorPkg.Use(), `.NewMultiError()`)
+
 	p.In()
 	for _, field := range message.Field {
 		fieldName := p.GetFieldName(message, field)
@@ -261,9 +263,11 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 			if repeated && nullable {
 				variableName = "*(item)"
 			}
-			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(&(`, variableName, `)); err != nil {`)
+
+			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(&(`, variableName, `)); err != nil && err.HasError() {`)
 			p.In()
-			p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `", err)`)
+			p.P(`getErr := err.ToMap()`)
+			p.P(`multiError.Append("`, fieldName, `",`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",  fmt.Errorf(getErr["`, fieldName, `"])))`)
 			p.Out()
 			p.P(`}`)
 		}
@@ -280,14 +284,16 @@ func (p *plugin) generateProto2Message(file *generator.FileDescriptor, message *
 			p.P(`}`)
 		}
 	}
-	p.P(`return nil`)
+	p.P(`if !multiError.HasError() { return nil }`)
+	p.P(`return multiError`)
 	p.Out()
 	p.P(`}`)
 }
 
 func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *generator.Descriptor) {
 	ccTypeName := generator.CamelCaseSlice(message.TypeName())
-	p.P(`func (this *`, ccTypeName, `) Validate() error {`)
+	p.P(`func (this *`, ccTypeName, `) Validate() *`, p.validatorPkg.Use(), `.MultiError {`)
+	p.P(`multiError :=  `, p.validatorPkg.Use(), `.NewMultiError()`)
 	p.In()
 
 	for _, oneof := range message.OneofDecl {
@@ -299,7 +305,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			oneOfName := generator.CamelCase(oneof.GetName())
 			p.P(`if this.Get` + oneOfName + `() == nil {`)
 			p.In()
-			p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, oneOfName, `",`, p.fmtPkg.Use(), `.Errorf("one of the fields must be set"))`)
+			p.P(`multiError.Append("`, oneOfName, `",`, p.validatorPkg.Use(), `.FieldError("`, oneOfName, `",`, p.fmtPkg.Use(), `.Errorf("one of the fields must be set")))`)
 			p.Out()
 			p.P(`}`)
 		}
@@ -357,7 +363,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				if nullable && !repeated {
 					p.P(`if nil == `, variableName, `{`)
 					p.In()
-					p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("message must exist"))`)
+					p.P(`multiError.Append("`, fieldName, `",`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("message must exist")))`)
 					p.Out()
 					p.P(`}`)
 				} else if repeated {
@@ -373,9 +379,11 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				// non-nullable fields in proto3 store actual structs, we need pointers to operate on interfaces
 				variableName = "&(" + variableName + ")"
 			}
-			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `); err != nil {`)
+
+			p.P(`if err := `, p.validatorPkg.Use(), `.CallValidatorIfExists(`, variableName, `); err != nil && err.HasError() {`)
 			p.In()
-			p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `", err)`)
+			p.P(`getErr := err.ToMap()`)
+			p.P(`multiError.Append("`, fieldName, `",`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",  fmt.Errorf(getErr["`, fieldName, `"])))`)
 			p.Out()
 			p.P(`}`)
 			if nullable {
@@ -394,7 +402,8 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 			p.P(`}`)
 		}
 	}
-	p.P(`return nil`)
+	p.P(`if !multiError.HasError() { return nil }`)
+	p.P(`return multiError`)
 	p.Out()
 	p.P(`}`)
 }
@@ -611,9 +620,9 @@ func (p *plugin) generateRepeatedCountValidator(variableName string, ccTypeName 
 
 func (p *plugin) generateErrorString(variableName string, fieldName string, specificError string, fv *validator.FieldValidator) {
 	if fv.GetHumanError() == "" {
-		p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`value '%v' must ", specificError, "`", `, `, variableName, `))`)
+		p.P(`multiError.Append("`, fieldName, `",`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`value '%v' must ", specificError, "`", `, `, variableName, `)))`)
 	} else {
-		p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", fv.GetHumanError(), "`))")
+		p.P(`multiError.Append("`, fieldName, `",`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`", fv.GetHumanError(), "`)))")
 	}
 }
 

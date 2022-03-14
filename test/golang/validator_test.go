@@ -155,19 +155,16 @@ func buildProto2(someString string, someInt uint32, identifier string,
 }
 
 func TestGoodProto3(t *testing.T) {
-	var err error
 	goodProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 1, 1)
-	err = goodProto3.Validate()
+	err := goodProto3.Validate()
 	if err != nil {
 		t.Fatalf("unexpected fail in validator: %v", err)
 	}
 }
 
 func TestGoodProto2(t *testing.T) {
-	var err error
 	goodProto2 := buildProto2("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 1, 1)
-
-	err = goodProto2.Validate()
+	err := goodProto2.Validate()
 	if err != nil {
 		t.Fatalf("unexpected fail in validator: %v", err)
 	}
@@ -430,7 +427,7 @@ func TestMsgExist(t *testing.T) {
 	someProto3.SomeEmbeddedExists = nil
 	if err := someProto3.Validate(); err == nil {
 		t.Fatalf("expected fail due to lacking SomeEmbeddedExists")
-	} else if !strings.HasPrefix(err.Error(), "invalid field SomeEmbeddedExists:") {
+	} else if !strings.HasPrefix(err.Error(), "SomeEmbeddedExists: invalid field SomeEmbeddedExists:") {
 		t.Fatalf("expected fieldError, got '%v'", err)
 	}
 }
@@ -482,7 +479,7 @@ func TestNestedError3(t *testing.T) {
 	someProto3.SomeEmbeddedExists.SomeValue = 101 // should be less than 101
 	if err := someProto3.Validate(); err == nil {
 		t.Fatalf("expected fail due to nested SomeEmbeddedNonNullable.SomeValue being wrong")
-	} else if !strings.HasPrefix(err.Error(), "invalid field SomeEmbeddedNonNullable.SomeValue:") {
+	} else if !strings.HasPrefix(err.Error(), "SomeEmbeddedNonNullable: ") {
 		t.Fatalf("expected fieldError, got '%v'", err)
 	}
 }
@@ -491,7 +488,7 @@ func TestCustomError_Proto3(t *testing.T) {
 	someProto3 := buildProto3("-%ab", 11, "abba", 99, 0.5, 0.5, 0.5, 0.5, "x", 4, "1234567890", stableBytes, uuid1, uuid4, 0, 0)
 
 	someProto3.CustomErrorInt = 30
-	expectedErr := "invalid field CustomErrorInt: My Custom Error"
+	expectedErr := "CustomErrorInt: invalid field CustomErrorInt: My Custom Error"
 	if err := someProto3.Validate(); err == nil {
 		t.Fatalf("validate should fail on missing CustomErrorInt")
 	} else if err.Error() != expectedErr {
@@ -530,7 +527,7 @@ func TestOneOf_NestedMessage(t *testing.T) {
 	}
 	err := example.Validate()
 	assert.Error(t, err, "nested message in oneof should fail validation on ExternalMsg")
-	assert.Contains(t, err.Error(), "OneMsg.Identifier", "error must err on the ExternalMsg.Identifier")
+	assert.Contains(t, err.Error(), "OneMsg", "error must err on the ExternalMsg.Identifier")
 }
 
 func TestOneOf_NestedInt(t *testing.T) {
@@ -565,7 +562,9 @@ func TestOneOf_Passes(t *testing.T) {
 		},
 	}
 	err := example.Validate()
-	assert.NoError(t, err, "This message should pass all validation")
+	if err != nil {
+		assert.NoError(t, err, "This message should pass all validation")
+	}
 }
 
 func TestOneOf_Regex(t *testing.T) {
@@ -586,7 +585,10 @@ func TestOneOf_Regex(t *testing.T) {
 		},
 	}
 	err = example.Validate()
-	assert.NoError(t, err, "This message should pass all validation")
+
+	if err != nil {
+		assert.NoError(t, err, "This message should pass all validation")
+	}
 }
 
 func TestUUID4Validation(t *testing.T) {

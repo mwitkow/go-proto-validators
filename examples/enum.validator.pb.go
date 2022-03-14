@@ -7,8 +7,8 @@ import (
 	fmt "fmt"
 	math "math"
 	proto "github.com/golang/protobuf/proto"
-	_ "github.com/mwitkow/go-proto-validators"
-	github_com_mwitkow_go_proto_validators "github.com/mwitkow/go-proto-validators"
+	_ "github.com/sampingantech/go-proto-validators"
+	github_com_sampingantech_go_proto_validators "github.com/sampingantech/go-proto-validators"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -16,9 +16,13 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-func (this *SomeMsg) Validate() error {
+func (this *SomeMsg) Validate() *github_com_sampingantech_go_proto_validators.MultiError {
+	multiError := github_com_sampingantech_go_proto_validators.NewMultiError()
 	if _, ok := Action_name[int32(this.Do)]; !ok {
-		return github_com_mwitkow_go_proto_validators.FieldError("Do", fmt.Errorf(`value '%v' must be a valid Action field`, this.Do))
+		multiError.Append("Do", github_com_sampingantech_go_proto_validators.FieldError("Do", fmt.Errorf(`value '%v' must be a valid Action field`, this.Do)))
 	}
-	return nil
+	if !multiError.HasError() {
+		return nil
+	}
+	return multiError
 }
