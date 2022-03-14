@@ -113,21 +113,21 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	}
 }
 
-func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.FieldValidator {
+func getFieldValidatorIfAny(field *descriptor.FieldDescriptorProto) *validator.FieldValidators {
 	if field.Options != nil {
 		v, err := proto.GetExtension(field.Options, validator.E_Field)
-		if err == nil && v.(*validator.FieldValidator) != nil {
-			return (v.(*validator.FieldValidator))
+		if err == nil && v.(*validator.FieldValidators) != nil {
+			return (v.(*validator.FieldValidators))
 		}
 	}
 	return nil
 }
 
-func getOneofValidatorIfAny(oneof *descriptor.OneofDescriptorProto) *validator.OneofValidator {
+func getOneofValidatorIfAny(oneof *descriptor.OneofDescriptorProto) *validator.OneofValidators {
 	if oneof.Options != nil {
 		v, err := proto.GetExtension(oneof.Options, validator.E_Oneof)
-		if err == nil && v.(*validator.OneofValidator) != nil {
-			return (v.(*validator.OneofValidator))
+		if err == nil && v.(*validator.OneofValidators) != nil {
+			return (v.(*validator.OneofValidators))
 		}
 	}
 	return nil
@@ -408,7 +408,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 	p.P(`}`)
 }
 
-func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidators) {
 	if fv.IntGt != nil {
 		p.P(`if !(`, variableName, ` > `, fv.IntGt, `) {`)
 		p.In()
@@ -430,7 +430,7 @@ func (p *plugin) generateIntValidator(variableName string, ccTypeName string, fi
 func (p *plugin) generateEnumValidator(
 	field *descriptor.FieldDescriptorProto,
 	variableName, ccTypeName, fieldName string,
-	fv *validator.FieldValidator) {
+	fv *validator.FieldValidators) {
 	if fv.GetIsInEnum() {
 		enum := p.ObjectNamed(field.GetTypeName()).(*generator.EnumDescriptor)
 		p.P(`if _, ok := `, strings.Join(enum.TypeName(), "_"), "_name[int32(", variableName, ")]; !ok {")
@@ -441,7 +441,7 @@ func (p *plugin) generateEnumValidator(
 	}
 }
 
-func (p *plugin) generateLengthValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+func (p *plugin) generateLengthValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidators) {
 	if fv.LengthGt != nil {
 		p.P(`if !( len(`, variableName, `) > `, fv.LengthGt, `) {`)
 		p.In()
@@ -470,7 +470,7 @@ func (p *plugin) generateLengthValidator(variableName string, ccTypeName string,
 	}
 }
 
-func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+func (p *plugin) generateFloatValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidators) {
 	upperIsStrict := true
 	lowerIsStrict := true
 
@@ -565,7 +565,7 @@ func getUUIDRegex(version *int32) (string, error) {
 	}
 }
 
-func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+func (p *plugin) generateStringValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidators) {
 	if fv.Regex != nil || fv.UuidVer != nil {
 		if fv.UuidVer != nil {
 			uuid, err := getUUIDRegex(fv.UuidVer)
@@ -594,7 +594,7 @@ func (p *plugin) generateStringValidator(variableName string, ccTypeName string,
 	p.generateLengthValidator(variableName, ccTypeName, fieldName, fv)
 }
 
-func (p *plugin) generateRepeatedCountValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidator) {
+func (p *plugin) generateRepeatedCountValidator(variableName string, ccTypeName string, fieldName string, fv *validator.FieldValidators) {
 	if fv == nil {
 		return
 	}
@@ -618,7 +618,7 @@ func (p *plugin) generateRepeatedCountValidator(variableName string, ccTypeName 
 	}
 }
 
-func (p *plugin) generateErrorString(variableName string, fieldName string, specificError string, fv *validator.FieldValidator) {
+func (p *plugin) generateErrorString(variableName string, fieldName string, specificError string, fv *validator.FieldValidators) {
 	if fv.GetHumanError() == "" {
 		p.P(`multiError.Append("`, fieldName, `",`, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), ".Errorf(`value '%v' must ", specificError, "`", `, `, variableName, `)))`)
 	} else {
@@ -664,11 +664,11 @@ func (p *plugin) fieldIsProto3Map(file *generator.FileDescriptor, message *gener
 	return msg.GetOptions().GetMapEntry()
 }
 
-func (p *plugin) validatorWithMessageExists(fv *validator.FieldValidator) bool {
+func (p *plugin) validatorWithMessageExists(fv *validator.FieldValidators) bool {
 	return fv != nil && fv.MsgExists != nil && *(fv.MsgExists)
 }
 
-func (p *plugin) validatorWithNonRepeatedConstraint(fv *validator.FieldValidator) bool {
+func (p *plugin) validatorWithNonRepeatedConstraint(fv *validator.FieldValidators) bool {
 	if fv == nil {
 		return false
 	}

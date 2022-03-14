@@ -16,14 +16,14 @@ option go_package = "github.com/sampingantech/go-proto-validators;validator";
 // TODO(mwitkow): Email protobuf-global-extension-registry@google.com to get an extension ID.
 
 extend google.protobuf.FieldOptions {
-  optional FieldValidator field = 65020;
+  optional FieldValidators field = 65020;
 }
 
 extend google.protobuf.OneofOptions {
-  optional OneofValidator oneof = 65021;
+  optional OneofValidators oneof = 65021;
 }
 
-message FieldValidator {
+message FieldValidators {
   // Uses a Golang RE2-syntax regex to match the field contents.
   optional string regex = 1;
   // Field value of integer strictly greater than this value.
@@ -74,7 +74,7 @@ message FieldValidator {
   optional int32 uuid_ver = 18;
 }
 
-message OneofValidator {
+message OneofValidators {
   // Require that one of the oneof fields is set.
   optional bool required = 1;
 }
