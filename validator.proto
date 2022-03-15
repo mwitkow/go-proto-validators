@@ -16,11 +16,11 @@ option go_package = "github.com/sampingantech/go-proto-validators;validator";
 // TODO(mwitkow): Email protobuf-global-extension-registry@google.com to get an extension ID.
 
 extend google.protobuf.FieldOptions {
-  optional FieldValidators fields = 65020;
+  optional FieldValidators fields = 65030;
 }
 
 extend google.protobuf.OneofOptions {
-  optional OneofValidators oneofs = 65021;
+  optional OneofValidators oneofs = 65031;
 }
 
 message FieldValidators {
