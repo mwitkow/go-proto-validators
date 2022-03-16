@@ -3,7 +3,7 @@ package validator.examples;
 import "github.com/sampingantech/go-proto-validators/validator.proto";
 
 message SomeMsg {
-  Action do = 1 [(validator.field) = {is_in_enum : true}];
+  Action do = 1 [(validator.fields) = {is_in_enum : true}];
 }
 
 enum Action {

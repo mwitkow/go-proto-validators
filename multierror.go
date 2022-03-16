@@ -1,8 +1,11 @@
 package validator
 
 import (
-	fmt "fmt"
 	"strings"
+
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // MultiError model
@@ -18,11 +21,7 @@ func NewMultiError() *MultiError {
 // Append error to multierror
 func (m *MultiError) Append(key string, err error) {
 	if err != nil {
-		if val, ok := m.errs[key]; ok {
-			m.errs[key] = fmt.Sprintf("%s; %s", val, err.Error())
-		} else {
-			m.errs[key] = err.Error()
-		}
+		m.errs[key] = err.Error()
 	}
 }
 
@@ -36,11 +35,20 @@ func (m *MultiError) ToMap() map[string]string {
 	return m.errs
 }
 
-// Error implement error from multiError
-func (m *MultiError) Error() string {
-	var str []string
-	for i, s := range m.errs {
-		str = append(str, fmt.Sprintf("%s: %s", i, s))
+func (m *MultiError) RPCError() error {
+	grpcStatus := status.New(codes.InvalidArgument, "BAD_REQ")
+
+	for field, message := range m.errs {
+		errMsg := strings.Split(message, " ;; ")
+
+		grpcStatus, _ = grpcStatus.WithDetails(&errdetails.ErrorInfo{
+			Reason: errMsg[0],
+			Domain: field,
+			Metadata: map[string]string{
+				"value": errMsg[1],
+			},
+		})
 	}
-	return strings.Join(str, "\n")
+
+	return grpcStatus.Err()
 }
