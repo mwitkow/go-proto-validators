@@ -61,7 +61,7 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/vanity"
 
-	validator "github.com/mwitkow/go-proto-validators"
+	validator "github.com/rakshasa/go-proto-validators"
 )
 
 const uuidPattern = "^([a-fA-F0-9]{8}-" +
@@ -98,7 +98,7 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	p.PluginImports = generator.NewPluginImports(p.Generator)
 	p.regexPkg = p.NewImport("regexp")
 	p.fmtPkg = p.NewImport("fmt")
-	p.validatorPkg = p.NewImport("github.com/mwitkow/go-proto-validators")
+	p.validatorPkg = p.NewImport("github.com/rakshasa/go-proto-validators")
 
 	for _, msg := range file.Messages() {
 		if msg.DescriptorProto.GetOptions().GetMapEntry() {

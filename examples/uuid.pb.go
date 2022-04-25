@@ -6,7 +6,7 @@ package validator_examples
 import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
-	_ "github.com/mwitkow/go-proto-validators"
+	_ "github.com/rakshasa/go-proto-validators"
 	math "math"
 )
 
