@@ -6,7 +6,7 @@ project_root="$(cd "$(cd "$( dirname "${BASH_SOURCE[0]}" )" && git rev-parse --s
 readonly project_root
 
 
-readonly PROTOC_VERSION=3.20.1
+readonly PROTOC_VERSION=3.18.1
 readonly PROTOC_GEN_GO_VERSION=1.27.1
 readonly PROTOC_GEN_GOGO_VERSION=1.3.2
 
@@ -74,14 +74,22 @@ cd /build/
 rm -rf \
   ./go.mod \
   ./go.sum \
-  ./vendor/
+  ./vendor \
+  ./pb/google
 
 go clean -cache
 go mod init github.com/rakshasa/go-proto-validator
 
+
 for dep in ${dependencies[@]}; do
-  go get -u -v "\${dep}"
+  go get -u -v -d "\${dep}"
 done
+
+
+wget -O ./pb-protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip
+unzip pb-protoc.zip -d ./pb-protoc
+mv ./pb-protoc/include/google ./pb/
+
 
 go mod tidy -v
 go mod vendor -v
@@ -97,8 +105,11 @@ echo
 EOF
 
 
-rm -rf ./{go.mod,go.sum,vendor}
+rm -rf \
+  ./{go.mod,go.sum,vendor} \
+  ./pb/google/
 
 cp -r "${build_dir}"/{go.mod,go.sum,vendor} ./
+cp "${build_dir}"/pb/google/protobuf/*.proto ./pb/google/protobuf/
  
 success="yes"

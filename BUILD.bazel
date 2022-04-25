@@ -8,11 +8,11 @@ gazelle(
     name = "gazelle",
 )
 
-# gazelle:prefix github.com/mwitkow/go-proto-validators
+# gazelle:prefix github.com/rakshasa/go-proto-validators
 # gazelle:build_file_name BUILD.bazel
 
 # By default resolve the top-level package to the gogo variant as it's required for the plugin compilation.
-# gazelle:resolve go github.com/mwitkow/go-proto-validators //:validators_gogo
+# gazelle:resolve go github.com/rakshasa/go-proto-validators //:validators_gogo
 
 go_proto_compiler(
     name = "go_proto_validators",
@@ -43,7 +43,7 @@ go_proto_library(
     compilers = [
         "@io_bazel_rules_go//proto:gogo_proto",
     ],
-    importpath = "github.com/mwitkow/go-proto-validators",
+    importpath = "github.com/rakshasa/go-proto-validators",
     proto = ":validator_proto",
     visibility = ["//:__pkg__"],
 )
@@ -53,7 +53,7 @@ go_proto_library(
     compilers = [
         "@io_bazel_rules_go//proto:go_proto",
     ],
-    importpath = "github.com/mwitkow/go-proto-validators",
+    importpath = "github.com/rakshasa/go-proto-validators",
     proto = ":validator_proto",
     visibility = ["//:__pkg__"],
 )
@@ -62,7 +62,7 @@ go_library(
     name = "validators_gogo",
     srcs = ["helper.go"],
     embed = [":_validators_gogo"],
-    importpath = "github.com/mwitkow/go-proto-validators",
+    importpath = "github.com/rakshasa/go-proto-validators",
     visibility = ["//visibility:public"],
 )
 
@@ -70,14 +70,14 @@ go_library(
     name = "validators_golang",
     srcs = ["helper.go"],
     embed = [":_validators_golang"],
-    importpath = "github.com/mwitkow/go-proto-validators",
+    importpath = "github.com/rakshasa/go-proto-validators",
     visibility = ["//visibility:public"],
 )
 
 proto_library(
     name = "validator_proto",
     srcs = ["validator.proto"],
-    import_prefix = "github.com/mwitkow/go-proto-validators",
+    import_prefix = "github.com/rakshasa/go-proto-validators",
     visibility = ["//visibility:public"],
     deps = ["@com_google_protobuf//:descriptor_proto"],
 )

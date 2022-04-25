@@ -3,7 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 go_library(
     name = "go_default_library",
     srcs = ["main.go"],
-    importpath = "github.com/mwitkow/go-proto-validators/protoc-gen-govalidators",
+    importpath = "github.com/rakshasa/go-proto-validators/protoc-gen-govalidators",
     visibility = ["//visibility:private"],
     deps = [
         "//plugin:go_default_library",

@@ -8,7 +8,7 @@ import (
 	math "math"
 	proto "github.com/golang/protobuf/proto"
 	_ "github.com/rakshasa/go-proto-validators"
-	github_com_mwitkow_go_proto_validators "github.com/rakshasa/go-proto-validators"
+	github_com_rakshasa_go_proto_validators "github.com/rakshasa/go-proto-validators"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -18,7 +18,7 @@ var _ = math.Inf
 
 func (this *SomeMsg) Validate() error {
 	if _, ok := Action_name[int32(this.Do)]; !ok {
-		return github_com_mwitkow_go_proto_validators.FieldError("Do", fmt.Errorf(`value '%v' must be a valid Action field`, this.Do))
+		return github_com_rakshasa_go_proto_validators.FieldError("Do", fmt.Errorf(`value '%v' must be a valid Action field`, this.Do))
 	}
 	return nil
 }

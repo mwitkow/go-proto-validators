@@ -1,6 +1,6 @@
 syntax = "proto3";
 package validator.examples;
-import "github.com/mwitkow/go-proto-validators/validator.proto";
+import "github.com/rakshasa/go-proto-validators/validator.proto";
 
 message UUIDMsg {
   // user_id must be a valid version 4 UUID.

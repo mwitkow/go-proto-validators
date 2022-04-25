@@ -26,7 +26,7 @@ Let's take the following `proto3` snippet:
 ```proto
 syntax = "proto3";
 package validator.examples;
-import "github.com/mwitkow/go-proto-validators/validator.proto";
+import "github.com/rakshasa/go-proto-validators/validator.proto";
 
 message InnerMessage {
   // some_integer can only be in range (0, 100).
@@ -95,7 +95,7 @@ export PATH=${PATH}:${GOPATH}/bin
 Then, do the usual
 
 ```sh
-go get github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
+go get github.com/rakshasa/go-proto-validators/protoc-gen-govalidators
 ```
 
 Your `protoc` builds probably look very simple like:

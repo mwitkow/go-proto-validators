@@ -8,7 +8,7 @@ message ValueType {
   string something  = 1 ;
 }
 
-// This needs to be able to compile. Fixes https://github.com/mwitkow/go-proto-validators/issues/1
+// This needs to be able to compile. Fixes https://github.com/rakshasa/go-proto-validators/issues/1
 message ValidatorMapMessage3 {
 	map<string, string> SomeStringMap = 1;
 

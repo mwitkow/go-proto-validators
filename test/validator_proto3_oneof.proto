@@ -4,7 +4,7 @@
 syntax = "proto3";
 package validatortest;
 
-import "github.com/mwitkow/go-proto-validators/validator.proto";
+import "github.com/rakshasa/go-proto-validators/validator.proto";
 
 message ExternalMsg {
   string Identifier = 1 [(validator.field) = {regex: "^[a-z]{2,5}$"}];
