@@ -357,7 +357,7 @@ func (p *plugin) generateProto3Message(file *generator.FileDescriptor, message *
 				if nullable && !repeated {
 					p.P(`if nil == `, variableName, `{`)
 					p.In()
-					p.P(`return `, p.validatorPkg.Use(), `.FieldError("`, fieldName, `",`, p.fmtPkg.Use(), `.Errorf("message must exist"))`)
+					p.generateErrorString(variableName, fieldName, `exist`, fieldValidator)
 					p.Out()
 					p.P(`}`)
 				} else if repeated {
