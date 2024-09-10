@@ -2,7 +2,6 @@
 // See LICENSE for licensing terms.
 
 /*
-
 The validator plugin generates a Validate method for each message.
 By default, if none of the message's fields are annotated with the gogo validator annotation, it returns a nil.
 In case some of the fields are annotated, the Validate function returns nil upon sucessful validation, or an error
@@ -28,23 +27,17 @@ The equal plugin also generates a test given it is enabled using one of the foll
 
 Let us look at:
 
-  github.com/gogo/protobuf/test/example/example.proto
+	github.com/gogo/protobuf/test/example/example.proto
 
 Btw all the output can be seen at:
 
-  github.com/gogo/protobuf/test/example/*
+	github.com/gogo/protobuf/test/example/*
 
 The following message:
 
-
-
 given to the equal plugin, will generate the following code:
 
-
-
 and the following test code:
-
-
 */
 package plugin
 
@@ -677,11 +670,11 @@ func (p *plugin) validatorWithNonRepeatedConstraint(fv *validator.FieldValidator
 		}
 
 		// Identify non-repeated constraints based on their name.
-		if fieldName != "RepeatedCountMin" && fieldName != "RepeatedCountMax" {
-			return true
+		if fieldName == "RepeatedCountMin" || fieldName == "RepeatedCountMax" {
+			return false
 		}
 	}
-	return false
+	return true
 }
 
 func (p *plugin) regexName(ccTypeName string, fieldName string) string {
